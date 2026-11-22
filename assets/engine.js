@@ -136,7 +136,7 @@ const mobile = innerWidth < 900;
 // place object to the visual side (left in RTL layouts)
 const side = sc.center || S.layout === 'center' ? 0 : mobile ? 0 : -2.6;
 root.position.x = side;
-const OBJ = ['giftbox','snowbox','bottle','pearls','ring','beans'].includes(sc.type);
+const OBJ = ['giftbox','snowbox','bottle','pearls','ring','beans','smoke'].includes(sc.type);
 if (mobile && OBJ) { root.position.y = S.heroImg ? -2.2 : -1.45; root.scale.setScalar(0.42); }
 
 function particles(n, color, size, spread, fall) {
@@ -260,6 +260,18 @@ if (T === 'giftbox' || T === 'snowbox') {
     o.userData = { p: Math.random() * 6, b: o.position.clone() }; scene.add(o); orbs.push(o);
   }
   tick.push((t) => orbs.forEach((o) => { o.position.y = o.userData.b.y + Math.sin(t * 0.6 + o.userData.p) * 0.5; o.position.x = o.userData.b.x + Math.cos(t * 0.4 + o.userData.p) * 0.4; }));
+} else if (T === 'smoke') {
+  const prof = [[0,-1.6],[0.9,-1.6],[0.95,-1.4],[0.55,-1.2],[0.45,-0.2],[0.6,0],[1.2,0.35],[1.25,0.55],[1.1,0.6],[0.6,0.4],[0,0.4]].map(([x,y]) => new THREE.Vector2(x, y));
+  const burner = new THREE.Mesh(new THREE.LatheGeometry(prof, 8), new THREE.MeshStandardMaterial({ color: C(sc.c1), metalness: 0.85, roughness: 0.3, flatShading: true }));
+  const coal = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 12), new THREE.MeshStandardMaterial({ color: C('#2a1208'), emissive: C(sc.c3 || '#ff6a1a'), emissiveIntensity: 1.4 }));
+  coal.position.y = 0.55; const b = new THREE.Group(); b.add(burner, coal); b.position.y = -0.6; root.add(b);
+  tick.push((t) => { b.rotation.y = t * 0.35; coal.material.emissiveIntensity = 1.1 + Math.sin(t * 3) * 0.4; });
+  const n = mobile ? 220 : 420; const geo = new THREE.BufferGeometry(); const p = new Float32Array(n * 3); const life = new Float32Array(n);
+  for (let i = 0; i < n; i++) { life[i] = Math.random(); }
+  geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const sm = new THREE.Points(geo, new THREE.PointsMaterial({ color: C(sc.c2), size: 0.35, transparent: true, opacity: 0.28, depthWrite: false }));
+  root.add(sm);
+  tick.push((t) => { for (let i = 0; i < n; i++) { life[i] += 0.004; if (life[i] > 1) life[i] = 0; const L = life[i]; p[i*3] = Math.sin(L * 8 + i) * L * 1.2; p[i*3+1] = L * 5.5; p[i*3+2] = Math.cos(L * 6 + i) * L * 0.8; } geo.attributes.position.needsUpdate = true; });
 } else if (T === 'ring') {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.42, 64, 160), new THREE.MeshStandardMaterial({ color: C(sc.c1), metalness: 1, roughness: 0.12 }));
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.6, 0), new THREE.MeshPhysicalMaterial({ color: C(sc.c2), transmission: 0.6, roughness: 0, ior: 2.4, thickness: 1, clearcoat: 1 }));
