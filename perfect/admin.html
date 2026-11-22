@@ -88,6 +88,23 @@ td .nm{font-weight:700}td .sb{color:var(--mut);font-size:.8rem}
 .ord ul{list-style:none;color:#d4d1d9;font-size:.92rem}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--gold);padding:.65rem 1.2rem;border-radius:12px;font-weight:700;opacity:0;transition:.3s;z-index:99;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%)}
+.blk{border:1px solid var(--line);border-radius:16px;padding:1rem;display:flex;flex-direction:column;gap:.8rem;background:rgba(255,255,255,.015)}
+.blk>.hd{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.blk>.hd h3{font-size:1.05rem;margin-inline-end:auto}
+.blk .hint{color:var(--mut);font-size:.82rem}
+.grp,.sec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.8rem;display:flex;flex-direction:column;gap:.6rem}
+.row{display:flex;gap:.5rem;align-items:center}
+.opt{display:grid;grid-template-columns:52px 1fr 110px auto auto auto;gap:.5rem;align-items:center}
+.oimg{width:52px;height:52px;border-radius:10px;border:1px dashed var(--line);display:grid;place-items:center;cursor:pointer;overflow:hidden;background:var(--bg);font-size:1.1rem;color:var(--mut);position:relative}
+.oimg img{width:100%;height:100%;object-fit:cover}
+.oimg.busy:after{content:"…";position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.6)}
+input[type=color]{width:42px;height:42px;padding:3px;border-radius:10px}
+.ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;flex:none}
+.ib:hover{border-color:#ff6b6b;color:#ff6b6b}
+.chipb{padding:.35rem .75rem;border-radius:99px;border:1px dashed var(--gold);color:var(--gold);font-size:.85rem;font-weight:700}
+.chipb:hover{background:rgba(231,184,79,.1)}
+.mini{flex-direction:row;align-items:center;gap:.35rem;font-size:.8rem;color:var(--mut);font-weight:500;white-space:nowrap}
+@media(max-width:860px){.opt{grid-template-columns:52px 1fr auto 38px;grid-template-areas:"i n n d" "i p c s";padding-bottom:.6rem;border-bottom:1px solid var(--line)}
+ .opt .oimg{grid-area:i;align-self:start}.opt .onm{grid-area:n}.opt .op{grid-area:p}.opt .oc{grid-area:c}.opt .os{grid-area:s}.opt .od{grid-area:d}}
 .mob{display:none}
 @media(max-width:860px){
  #app{grid-template-columns:1fr}
@@ -316,13 +333,25 @@ const PSU = {
   num: n => Number(n || 0).toLocaleString("ar-SA"),
   sar: '<i class="sar" aria-label="ريال"></i>',
   off: (p) => p.old_price && p.old_price > p.price ? Math.round((1 - p.price / p.old_price) * 100) : 0,
-  flavors: p => String(p.flavors || "").split(/[،,]/).map(s => s.trim()).filter(Boolean)
+  flavors: p => String(p.flavors || "").split(/[،,]/).map(s => s.trim()).filter(Boolean),
+  /* مجموعات الخيارات (ألوان، أحجام، نكهات…) */
+  groups: p => {
+    if (Array.isArray(p.options) && p.options.some(g => g.items && g.items.length)) return p.options.filter(g => g.items && g.items.length);
+    const f = PSU.flavors(p); return f.length ? [{ name: "النكهة", items: f.map(n => ({ name: n })) }] : [];
+  },
+  /* محتوى القسم: لو كل سطر فيه «:» يصير جدول */
+  section: txt => {
+    const lines = String(txt || "").split(/\n/).map(s => s.trim()).filter(Boolean);
+    const isTable = lines.length > 1 && lines.every(l => /[:：]/.test(l));
+    if (isTable) return '<table class="nt">' + lines.map(l => { const i = l.search(/[:：]/); return `<tr><th>${PSU.esc(l.slice(0, i).trim())}</th><td>${PSU.esc(l.slice(i + 1).trim())}</td></tr>`; }).join("") + "</table>";
+    return lines.map(l => `<p>${PSU.esc(l)}</p>`).join("");
+  }
 };
 
 </script>
 <script>
 (async()=>{
-const {esc,num,sar,off}=PSU;
+const {esc,num,sar,off,groups}=PSU;
 const $=s=>document.querySelector(s);
 let D,tab="products",fq="",fc="all";
 
@@ -393,8 +422,11 @@ function editP(p){
    <label>السعر بعد <small>(السعر الحالي)</small><input id="pPrice" type="number" min="0" step="0.01" value="${p.price??""}" placeholder="205" required></label>
    <label>شارة <small>(اختياري)</small><input id="pBadge" value="${esc(p.badge)}" placeholder="الأكثر طلبًا / العلبتين بـ 100"></label></div>
   <div class="prev" id="prev"></div>
-  <label>النكهات <small>افصل بينها بفاصلة ،</small><input id="pFl" value="${esc(p.flavors)}" placeholder="شوكولاتة، فانيلا، فراولة"></label>
-  <label>التفاصيل<textarea id="pDesc" placeholder="فوائد المنتج وطريقة الاستخدام">${esc(p.description)}</textarea></label>
+  <div class="blk"><div class="hd"><h3>🎨 الخيارات</h3><button class="chipb" data-ag="اللون">＋ ألوان</button><button class="chipb" data-ag="الحجم">＋ أحجام</button><button class="chipb" data-ag="النكهة">＋ نكهات</button><button class="chipb" data-ag="">＋ خيار آخر</button></div>
+   <div class="hint">مثلًا شنطة بألوان مختلفة: لكل لون حط صورته، ولما يختاره الزبون تتغير الصورة. السعر اتركه فاضي إذا نفس سعر المنتج.</div><div id="grps"></div></div>
+  <label>الوصف<textarea id="pDesc" placeholder="فوائد المنتج وطريقة الاستخدام">${esc(p.description)}</textarea></label>
+  <div class="blk"><div class="hd"><h3>📑 أقسام إضافية في صفحة المنتج</h3><button class="chipb" data-as="nut">＋ القيم الغذائية</button><button class="chipb" data-as="use">＋ طريقة الاستخدام</button><button class="chipb" data-as="ing">＋ المكونات</button><button class="chipb" data-as="">＋ قسم جديد</button></div>
+   <div class="hint">كل قسم يطلع للزبون تبويب. إذا كتبت كل معلومة في سطر بهالشكل «البروتين: 24 جم» يطلع جدول مرتب.</div><div id="secs"></div></div>
   <div class="g3"><label class="chk"><input type="checkbox" id="pStock" style="width:auto" ${p.in_stock!==false?"checked":""}> متوفر</label>
    <label class="chk"><input type="checkbox" id="pFeat" style="width:auto" ${p.featured?"checked":""}> يطلع في الواجهة الرئيسية</label>
    <label>الترتيب <small>الأصغر يطلع أول</small><input id="pSort" type="number" value="${p.sort??""}"></label></div>
@@ -410,7 +442,44 @@ function editP(p){
   function updPrev(){const pr=+$("#pPrice").value||0,ol=+$("#pOld").value||0,o=ol>pr&&pr?Math.round((1-pr/ol)*100):0;
     $("#prev").innerHTML=`<span style="color:var(--mut)">كذا يطلع السعر في الموقع:</span><b class="p">${num(pr)}${sar}</b>${o?`<s style="color:var(--mut)">${num(ol)}</s><span class="pct">-${num(o)}٪</span>`:""}`;}
   ["pPrice","pOld"].forEach(i=>$("#"+i).oninput=updPrev);updPrev();
-  $("#pSave").onclick=async()=>{const b=$("#pSave");
+  /* ---- الخيارات ---- */
+  let G=JSON.parse(JSON.stringify(groups(p))).map(g=>({name:g.name,items:g.items.map(i=>Object.assign({name:"",image:"",price:"",color:"",in_stock:true},i))}));
+  let SEC=JSON.parse(JSON.stringify(Array.isArray(p.sections)?p.sections:[]));
+  const isColor=n=>/لون|ألوان|الوان|color/i.test(n||"");
+  function syncG(){document.querySelectorAll("#grps .grp").forEach((el,gi)=>{G[gi].name=el.querySelector("[data-gn]").value.trim();
+    el.querySelectorAll(".opt").forEach((o,ii)=>{const it=G[gi].items[ii];it.name=o.querySelector("[data-on]").value.trim();it.price=o.querySelector("[data-op]").value;
+      const c=o.querySelector("[data-oc]");if(c)it.color=c.value;it.in_stock=o.querySelector("[data-os]").checked;});});}
+  function drawG(){$("#grps").innerHTML=G.map((g,gi)=>`<div class="grp"><div class="row"><input data-gn value="${esc(g.name)}" placeholder="اسم الخيار: اللون، الحجم…" style="font-weight:700"><button class="ib" data-dg="${gi}" title="حذف المجموعة">🗑</button></div>
+    ${g.items.map((it,ii)=>`<div class="opt"><div class="oimg" data-oi="${gi}:${ii}" title="صورة هذا الخيار">${it.image?`<img src="${esc(it.image)}">`:"📷"}</div>
+      <input data-on class="onm" value="${esc(it.name)}" placeholder="${isColor(g.name)?"أحمر":"الاسم"}">
+      <input data-op class="op" type="number" min="0" step="0.01" value="${it.price??""}" placeholder="سعر خاص">
+      ${isColor(g.name)&&!it.image?`<input data-oc class="oc" type="color" value="${esc(it.color||"#222222")}" title="لون الدائرة">`:`<span class="oc"></span>`}
+      <label class="mini os"><input data-os type="checkbox" style="width:auto" ${it.in_stock!==false?"checked":""}>متوفر</label>
+      <button class="ib od" data-do="${gi}:${ii}" title="حذف">✕</button></div>`).join("")}
+    <button class="chipb" data-ao="${gi}" style="align-self:flex-start">＋ إضافة ${esc(g.name||"خيار")}</button></div>`).join("");}
+  $("#grps").onclick=async e=>{const t=e.target.closest("[data-dg],[data-do],[data-ao],[data-oi]");if(!t)return;syncG();
+    if(t.dataset.dg!==undefined){if(!await ask("تحذف هذي المجموعة كاملة؟","احذف"))return;G.splice(+t.dataset.dg,1);drawG();}
+    else if(t.dataset.do){const[a,b]=t.dataset.do.split(":").map(Number);G[a].items.splice(b,1);if(!G[a].items.length)G.splice(a,1);drawG();}
+    else if(t.dataset.ao!==undefined){G[+t.dataset.ao].items.push({name:"",image:"",price:"",color:"",in_stock:true});drawG();const o=$("#grps").querySelectorAll(`.grp`)[+t.dataset.ao].querySelectorAll("[data-on]");o[o.length-1].focus();}
+    else if(t.dataset.oi){const[a,b]=t.dataset.oi.split(":").map(Number);const f=document.createElement("input");f.type="file";f.accept="image/*";
+      f.onchange=async()=>{if(!f.files[0])return;t.classList.add("busy");try{const bl=await compress(f.files[0]);G[a].items[b].image=await PSData.uploadImage(bl);syncG();drawG();}catch(er){t.classList.remove("busy");say(er.message);}};f.click();}};
+  $("#grps").addEventListener("change",e=>{if(e.target.matches("[data-gn]")){syncG();drawG();}});
+  document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=()=>{syncG();G.push({name:b.dataset.ag,items:[{name:"",image:"",price:"",color:"",in_stock:true}]});drawG();
+    const gs=$("#grps").querySelectorAll(".grp");const last=gs[gs.length-1];(b.dataset.ag?last.querySelector("[data-on]"):last.querySelector("[data-gn]")).focus();});
+  drawG();
+  /* ---- الأقسام ---- */
+  const TPL={nut:["القيم الغذائية","حجم الحصة: \nالسعرات الحرارية: \nالبروتين: \nالكربوهيدرات: \nالسكريات: \nالدهون: \nالصوديوم: "],use:["طريقة الاستخدام",""],ing:["المكونات",""]};
+  function syncS(){document.querySelectorAll("#secs .sec").forEach((el,i)=>{SEC[i].title=el.querySelector("[data-st]").value.trim();SEC[i].body=el.querySelector("[data-sb]").value;});}
+  function drawS(){$("#secs").innerHTML=SEC.map((x,i)=>`<div class="sec"><div class="row"><input data-st value="${esc(x.title)}" placeholder="عنوان القسم" style="font-weight:700">
+    <button class="ib" data-mu="${i}" title="فوق" ${i?"":"disabled"}>↑</button><button class="ib" data-ds="${i}" title="حذف">🗑</button></div>
+    <textarea data-sb rows="${Math.max(3,String(x.body).split("\n").length)}" placeholder="اكتب المحتوى…">${esc(x.body)}</textarea></div>`).join("");}
+  $("#secs").onclick=async e=>{const t=e.target.closest("[data-ds],[data-mu]");if(!t)return;syncS();
+    if(t.dataset.ds!==undefined){if(!await ask("تحذف هذا القسم؟","احذف"))return;SEC.splice(+t.dataset.ds,1);}
+    else{const i=+t.dataset.mu;[SEC[i-1],SEC[i]]=[SEC[i],SEC[i-1]];}drawS();};
+  document.querySelectorAll("[data-as]").forEach(b=>b.onclick=()=>{syncS();const t=TPL[b.dataset.as]||["",""];SEC.push({title:t[0],body:t[1]});drawS();
+    const ss=$("#secs").querySelectorAll(".sec");const last=ss[ss.length-1];(t[0]?last.querySelector("[data-sb]"):last.querySelector("[data-st]")).focus();});
+  drawS();
+  $("#pSave").onclick=async()=>{syncG();syncS();const b=$("#pSave");
     const name=$("#pName").value.trim(),price=parseFloat($("#pPrice").value);
     if(!name)return $("#pName").focus(),toast("اكتب اسم المنتج");
     if(!(price>=0))return $("#pPrice").focus(),toast("اكتب السعر");
@@ -420,7 +489,8 @@ function editP(p){
     b.disabled=true;b.textContent="جاري الحفظ…";
     try{if(blob)imgVal=await PSData.uploadImage(blob);
       Object.assign(p,{name,brand:$("#pBrand").value.trim(),category_id:$("#pCat").value,short:$("#pShort").value.trim(),description:$("#pDesc").value.trim(),
-        flavors:$("#pFl").value.trim(),price,old_price:old>0?old:null,badge:$("#pBadge").value.trim(),image:imgVal,in_stock:$("#pStock").checked,featured:$("#pFeat").checked,sort:parseInt($("#pSort").value)||0});
+        flavors:"",options:G.map(g=>({name:g.name||"خيار",items:g.items.filter(i=>i.name||i.image).map(i=>({name:i.name||g.name,image:i.image||"",price:+i.price>0?+i.price:null,color:isColor(g.name)?i.color||"":"",in_stock:i.in_stock!==false}))})).filter(g=>g.items.length),
+        sections:SEC.map(x=>({title:x.title,body:x.body.split("\n").map(l=>l.trim()).filter(l=>l&&!/[:：]$/.test(l)).join("\n")})).filter(x=>x.title&&x.body),price,old_price:old>0?old:null,badge:$("#pBadge").value.trim(),image:imgVal,in_stock:$("#pStock").checked,featured:$("#pFeat").checked,sort:parseInt($("#pSort").value)||0});
       await PSData.save("products",p);await reload();closeM();vProducts();toast("انحفظ ✓");}
     catch(e){say(e.message);b.disabled=false;b.textContent="حفظ المنتج";}};
 }
