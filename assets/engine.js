@@ -274,7 +274,7 @@ if (T === 'giftbox' || T === 'snowbox') {
   root.add(sm);
   tick.push((t) => { for (let i = 0; i < n; i++) { life[i] += 0.004; if (life[i] > 1) life[i] = 0; const L = life[i]; p[i*3] = Math.sin(L * 8 + i) * L * 1.2; p[i*3+1] = L * 5.5; p[i*3+2] = Math.cos(L * 6 + i) * L * 0.8; } geo.attributes.position.needsUpdate = true; });
 } else if (T === 'ring') {
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.42, 64, 160), new THREE.MeshStandardMaterial({ color: C(sc.c1), metalness: 1, roughness: 0.12 }));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.42, 64, 160), new THREE.MeshStandardMaterial({ color: C(sc.c1), metalness: 0.55, roughness: 0.22, emissive: C(sc.c1), emissiveIntensity: 0.08 }));
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.6, 0), new THREE.MeshPhysicalMaterial({ color: C(sc.c2), transmission: 0.6, roughness: 0, ior: 2.4, thickness: 1, clearcoat: 1 }));
   gem.position.y = 2.05; const g2 = new THREE.Group(); g2.add(ring, gem); root.add(g2);
   tick.push((t) => { g2.rotation.y = t * 0.5; g2.rotation.x = 0.4 + Math.sin(t * 0.6) * 0.15; });
