@@ -136,7 +136,7 @@ const mobile = innerWidth < 900;
 // place object to the visual side (left in RTL layouts)
 const side = sc.center || S.layout === 'center' ? 0 : mobile ? 0 : -2.6;
 root.position.x = side;
-const OBJ = ['giftbox','snowbox','bottle','pearls','ring'].includes(sc.type);
+const OBJ = ['giftbox','snowbox','bottle','pearls','ring','beans'].includes(sc.type);
 if (mobile && OBJ) { root.position.y = S.heroImg ? -2.2 : -1.45; root.scale.setScalar(0.42); }
 
 function particles(n, color, size, spread, fall) {
@@ -239,6 +239,27 @@ if (T === 'giftbox' || T === 'snowbox') {
   const big = new THREE.Mesh(new THREE.SphereGeometry(1.1, 64, 64), new THREE.MeshPhysicalMaterial({ color: C(sc.c3 || sc.c1), roughness: 0.08, clearcoat: 1, iridescence: 1, iridescenceIOR: 1.5 }));
   root.add(big);
   tick.push((t) => { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + t * 0.3; d.position.set(Math.cos(a) * 2.6, Math.sin(a * 2 + t) * 0.25, Math.sin(a) * 2.6); d.scale.setScalar(0.8 + Math.sin(i) * 0.3); d.updateMatrix(); mesh.setMatrixAt(i, d.matrix); } mesh.instanceMatrix.needsUpdate = true; root.rotation.x = 0.35 + Math.sin(t * 0.3) * 0.1; big.position.y = Math.sin(t) * 0.1; });
+} else if (T === 'beans') {
+  const geo = new THREE.SphereGeometry(0.5, 32, 24); geo.scale(1, 0.72, 0.62);
+  const pa = geo.attributes.position; for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), z = pa.getZ(i); if (z > 0) pa.setZ(i, z - Math.exp(-x * x * 60) * 0.12); } geo.computeVertexNormals();
+  const n = mobile ? 40 : 70;
+  const mesh = new THREE.InstancedMesh(geo, new THREE.MeshPhysicalMaterial({ color: C(sc.c1), roughness: 0.35, clearcoat: 0.6 }), n);
+  const d = new THREE.Object3D(); const st = [];
+  for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, rr = Math.random() * 2.4; st.push({ x: Math.cos(a) * rr, y: (Math.random() - 0.5) * 4.5, z: Math.sin(a) * rr, r: Math.random() * 6, s: 0.45 + Math.random() * 0.35 }); }
+  root.add(mesh);
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.8, 1.3, 64, 1, true), new THREE.MeshPhysicalMaterial({ color: C(sc.c2), roughness: 0.2, clearcoat: 1, side: THREE.DoubleSide }));
+  cup.position.y = -2.6; root.add(cup);
+  tick.push((t) => { st.forEach((p, i) => { d.position.set(p.x * Math.cos(t * 0.2) - p.z * Math.sin(t * 0.2), p.y + Math.sin(t + p.r) * 0.25, p.x * Math.sin(t * 0.2) + p.z * Math.cos(t * 0.2)); d.rotation.set(t * 0.5 + p.r, t * 0.3 + p.r, p.r); d.scale.setScalar(p.s); d.updateMatrix(); mesh.setMatrixAt(i, d.matrix); }); mesh.instanceMatrix.needsUpdate = true; });
+  const steam = particles(mobile ? 150 : 300, sc.c3 || '#ffffff', 0.08, 8, 0.012); steam.position.x = side;
+} else if (T === 'orbs') {
+  const cols = [sc.c1, sc.c2, sc.c3 || sc.c1];
+  const orbs = [];
+  for (let i = 0; i < (mobile ? 6 : 9); i++) {
+    const o = new THREE.Mesh(new THREE.SphereGeometry(0.5 + Math.random() * 0.9, 64, 64), new THREE.MeshPhysicalMaterial({ color: C(cols[i % 3]), roughness: 0.1, transmission: 0.55, thickness: 1.5, iridescence: 0.8, clearcoat: 1 }));
+    o.position.set((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 3 - 1);
+    o.userData = { p: Math.random() * 6, b: o.position.clone() }; scene.add(o); orbs.push(o);
+  }
+  tick.push((t) => orbs.forEach((o) => { o.position.y = o.userData.b.y + Math.sin(t * 0.6 + o.userData.p) * 0.5; o.position.x = o.userData.b.x + Math.cos(t * 0.4 + o.userData.p) * 0.4; }));
 } else if (T === 'ring') {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.42, 64, 160), new THREE.MeshStandardMaterial({ color: C(sc.c1), metalness: 1, roughness: 0.12 }));
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.6, 0), new THREE.MeshPhysicalMaterial({ color: C(sc.c2), transmission: 0.6, roughness: 0, ior: 2.4, thickness: 1, clearcoat: 1 }));
