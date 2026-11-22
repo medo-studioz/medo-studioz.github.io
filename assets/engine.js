@@ -255,8 +255,8 @@ if (T === 'giftbox' || T === 'snowbox') {
   const cols = [sc.c1, sc.c2, sc.c3 || sc.c1];
   const orbs = [];
   for (let i = 0; i < (mobile ? 6 : 9); i++) {
-    const o = new THREE.Mesh(new THREE.SphereGeometry(0.5 + Math.random() * 0.9, 64, 64), new THREE.MeshPhysicalMaterial({ color: C(cols[i % 3]), roughness: 0.1, transmission: 0.55, thickness: 1.5, iridescence: 0.8, clearcoat: 1 }));
-    o.position.set((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 3 - 1);
+    const o = new THREE.Mesh(new THREE.SphereGeometry(0.3 + Math.random() * 0.45, 48, 48), new THREE.MeshPhysicalMaterial({ color: C(cols[i % 3]), roughness: 0.15, iridescence: 0.8, clearcoat: 1, transparent: true, opacity: 0.6 }));
+    o.position.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 7, -2 - Math.random() * 3);
     o.userData = { p: Math.random() * 6, b: o.position.clone() }; scene.add(o); orbs.push(o);
   }
   tick.push((t) => orbs.forEach((o) => { o.position.y = o.userData.b.y + Math.sin(t * 0.6 + o.userData.p) * 0.5; o.position.x = o.userData.b.x + Math.cos(t * 0.4 + o.userData.p) * 0.4; }));
