@@ -105,6 +105,13 @@ input[type=color]{width:42px;height:42px;padding:3px;border-radius:10px}
 .mini{flex-direction:row;align-items:center;gap:.35rem;font-size:.8rem;color:var(--mut);font-weight:500;white-space:nowrap}
 @media(max-width:860px){.opt{grid-template-columns:52px 1fr auto 38px;grid-template-areas:"i n n d" "i p c s";padding-bottom:.6rem;border-bottom:1px solid var(--line)}
  .opt .oimg{grid-area:i;align-self:start}.opt .onm{grid-area:n}.opt .op{grid-area:p}.opt .oc{grid-area:c}.opt .os{grid-area:s}.opt .od{grid-area:d}}
+.gal{display:flex;flex-wrap:wrap;gap:.5rem}
+.gal .gi{position:relative;width:92px;height:92px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.gal .gi img{width:100%;height:100%;object-fit:cover}
+.gal .gi button{position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:8px;background:rgba(0,0,0,.75);font-size:.8rem}
+.gal .gi.busy{display:grid;place-items:center;color:var(--mut);background:var(--bg)}
+.nr{display:grid;grid-template-columns:1fr 1fr 38px;gap:.5rem}
+#pDesc{min-height:200px;line-height:1.8}
 .mob{display:none}
 @media(max-width:860px){
  #app{grid-template-columns:1fr}
@@ -188,7 +195,8 @@ const PS_SEED = {
     hero_title: "وقود عضلاتك… بسعر يرضيك",
     hero_sub: "بروتين، كرياتين، بري ورك أوت وحرق دهون أصلية ١٠٠٪ — ومعها نصيحة صادقة تختار فيها اللي يناسب هدفك.",
     address: "ممشى طريق الهجرة، حي القصواء، المدينة المنورة",
-    hours: "السبت – الخميس: ٤:٣٠ العصر – ١٢:٠٠ الليل\nالجمعة: ٥:٣٠ – ١٠:٣٠ مساءً",
+    hours: "من العصر إلى ١٢ مساءً\nماعدا يوم الجمعة",
+    hours_short: "من العصر إلى ١٢ مساءً ماعدا يوم الجمعة",
     map_url: "https://maps.app.goo.gl/bzPPFJrEcjp335EZ8",
     map_embed: "https://www.google.com/maps?q=24.4234967,39.5825958&z=16&output=embed",
     instagram: "", snapchat: "", tiktok: "",
@@ -340,6 +348,7 @@ const PSU = {
     const f = PSU.flavors(p); return f.length ? [{ name: "النكهة", items: f.map(n => ({ name: n })) }] : [];
   },
   /* محتوى القسم: لو كل سطر فيه «:» يصير جدول */
+  paras: txt => String(txt || "").split(/\n/).map(s => s.trim()).filter(Boolean).map(l => `<p>${PSU.esc(l)}</p>`).join(""),
   section: txt => {
     const lines = String(txt || "").split(/\n/).map(s => s.trim()).filter(Boolean);
     const isTable = lines.length > 1 && lines.every(l => /[:：]/.test(l));
@@ -418,14 +427,18 @@ function editP(p){
      <label>القسم<select id="pCat">${D.categories.map(c=>`<option value="${c.id}" ${p.category_id===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></label></div>
     <label>وصف قصير <small>يطلع تحت الاسم</small><input id="pShort" value="${esc(p.short)}" placeholder="٢٤ جم بروتين • ٦٠ حصة"></label>
    </div></div>
+  <div class="blk"><div class="hd"><h3>🖼️ صور إضافية</h3><button class="chipb" id="gAdd">＋ أضف صور</button></div>
+   <div class="hint">زوايا مختلفة للمنتج، أو صورة جدول القيم الغذائية اللي على العلبة. تقدر تختار أكثر من صورة مرة وحدة.</div><div class="gal" id="gal"></div></div>
   <div class="g3"><label>السعر قبل <small>(اختياري – يطلع مشطوب)</small><input id="pOld" type="number" min="0" step="0.01" value="${p.old_price??""}" placeholder="305"></label>
    <label>السعر بعد <small>(السعر الحالي)</small><input id="pPrice" type="number" min="0" step="0.01" value="${p.price??""}" placeholder="205" required></label>
    <label>شارة <small>(اختياري)</small><input id="pBadge" value="${esc(p.badge)}" placeholder="الأكثر طلبًا / العلبتين بـ 100"></label></div>
   <div class="prev" id="prev"></div>
   <div class="blk"><div class="hd"><h3>🎨 الخيارات</h3><button class="chipb" data-ag="اللون">＋ ألوان</button><button class="chipb" data-ag="الحجم">＋ أحجام</button><button class="chipb" data-ag="النكهة">＋ نكهات</button><button class="chipb" data-ag="">＋ خيار آخر</button></div>
    <div class="hint">مثلًا شنطة بألوان مختلفة: لكل لون حط صورته، ولما يختاره الزبون تتغير الصورة. السعر اتركه فاضي إذا نفس سعر المنتج.</div><div id="grps"></div></div>
-  <label>الوصف<textarea id="pDesc" placeholder="فوائد المنتج وطريقة الاستخدام">${esc(p.description)}</textarea></label>
-  <div class="blk"><div class="hd"><h3>📑 أقسام إضافية في صفحة المنتج</h3><button class="chipb" data-as="nut">＋ القيم الغذائية</button><button class="chipb" data-as="use">＋ طريقة الاستخدام</button><button class="chipb" data-as="ing">＋ المكونات</button><button class="chipb" data-as="">＋ قسم جديد</button></div>
+  <label>الوصف والفوائد <small>اكتب براحتك، وكل فائدة في سطر</small><textarea id="pDesc" placeholder="مثال:&#10;يساعد على بناء العضلات واستشفائها بعد التمرين&#10;سريع الامتصاص وقليل الدهون&#10;مناسب للتنشيف والتضخيم">${esc(p.description)}</textarea></label>
+  <div class="blk"><div class="hd"><h3>🥗 جدول القيم الغذائية</h3><button class="chipb" id="nAdd">＋ صف جديد</button></div>
+   <div class="hint">اكتب القيمة جنب كل سطر (للحصة الواحدة). السطر اللي تخليه فاضي ما يطلع للزبون، وتقدر تغيّر أسماء السطور.</div><div id="nut" style="display:flex;flex-direction:column;gap:.5rem"></div></div>
+  <div class="blk"><div class="hd"><h3>📑 أقسام إضافية</h3><button class="chipb" data-as="use">＋ طريقة الاستخدام</button><button class="chipb" data-as="ing">＋ المكونات</button><button class="chipb" data-as="">＋ قسم جديد</button></div>
    <div class="hint">كل قسم يطلع للزبون تبويب. إذا كتبت كل معلومة في سطر بهالشكل «البروتين: 24 جم» يطلع جدول مرتب.</div><div id="secs"></div></div>
   <div class="g3"><label class="chk"><input type="checkbox" id="pStock" style="width:auto" ${p.in_stock!==false?"checked":""}> متوفر</label>
    <label class="chk"><input type="checkbox" id="pFeat" style="width:auto" ${p.featured?"checked":""}> يطلع في الواجهة الرئيسية</label>
@@ -479,7 +492,26 @@ function editP(p){
   document.querySelectorAll("[data-as]").forEach(b=>b.onclick=()=>{syncS();const t=TPL[b.dataset.as]||["",""];SEC.push({title:t[0],body:t[1]});drawS();
     const ss=$("#secs").querySelectorAll(".sec");const last=ss[ss.length-1];(t[0]?last.querySelector("[data-sb]"):last.querySelector("[data-st]")).focus();});
   drawS();
-  $("#pSave").onclick=async()=>{syncG();syncS();const b=$("#pSave");
+  /* ---- صور إضافية ---- */
+  let GAL=Array.isArray(p.images)?[...p.images]:[];
+  function drawGal(busy=0){$("#gal").innerHTML=GAL.map((u,i)=>`<div class="gi"><img src="${esc(u)}"><button data-gd="${i}" title="حذف">✕</button></div>`).join("")+Array(busy).fill('<div class="gi busy">…</div>').join("");}
+  $("#gal").onclick=e=>{const b=e.target.closest("[data-gd]");if(!b)return;GAL.splice(+b.dataset.gd,1);drawGal();};
+  $("#gAdd").onclick=()=>{const f=document.createElement("input");f.type="file";f.accept="image/*";f.multiple=true;
+    f.onchange=async()=>{const fs=[...f.files];let left=fs.length;drawGal(left);for(const x of fs){try{GAL.push(await PSData.uploadImage(await compress(x)));}catch(er){say(er.message);}left--;drawGal(left);}};f.click();};
+  drawGal();
+  /* ---- القيم الغذائية ---- */
+  const NUTDEF=["حجم الحصة","السعرات الحرارية","البروتين","الكربوهيدرات","السكريات","الدهون","الصوديوم"];
+  let NUT=Array.isArray(p.nutrition)&&p.nutrition.length?p.nutrition.map(r=>[r[0],r[1]]):null;
+  const si=SEC.findIndex(x=>/القيم الغذائية/.test(x.title));
+  if(!NUT&&si>=0){NUT=SEC[si].body.split("\n").filter(l=>/[:：]/.test(l)).map(l=>{const k=l.search(/[:：]/);return[l.slice(0,k).trim(),l.slice(k+1).trim()];});SEC.splice(si,1);drawS();}
+  if(!NUT)NUT=NUTDEF.map(k=>[k,""]);
+  function syncN(){document.querySelectorAll("#nut .nr").forEach((r,i)=>{NUT[i]=[r.querySelector("[data-nk]").value.trim(),r.querySelector("[data-nv]").value.trim()];});}
+  function drawN(){$("#nut").innerHTML=NUT.map((r,i)=>`<div class="nr"><input data-nk value="${esc(r[0])}" placeholder="مثلًا: الكرياتين"><input data-nv value="${esc(r[1])}" placeholder="مثلًا: 24 جم"><button class="ib" data-nd="${i}" title="حذف">✕</button></div>`).join("");}
+  $("#nut").onclick=e=>{const b=e.target.closest("[data-nd]");if(!b)return;syncN();NUT.splice(+b.dataset.nd,1);drawN();};
+  $("#nAdd").onclick=()=>{syncN();NUT.push(["",""]);drawN();const k=$("#nut").querySelectorAll("[data-nk]");k[k.length-1].focus();};
+  drawN();
+  const ta=$("#pDesc"),grow=()=>{ta.style.height="auto";ta.style.height=Math.max(200,ta.scrollHeight+4)+"px";};ta.oninput=grow;setTimeout(grow,0);
+  $("#pSave").onclick=async()=>{syncG();syncS();syncN();const b=$("#pSave");
     const name=$("#pName").value.trim(),price=parseFloat($("#pPrice").value);
     if(!name)return $("#pName").focus(),toast("اكتب اسم المنتج");
     if(!(price>=0))return $("#pPrice").focus(),toast("اكتب السعر");
@@ -489,7 +521,7 @@ function editP(p){
     b.disabled=true;b.textContent="جاري الحفظ…";
     try{if(blob)imgVal=await PSData.uploadImage(blob);
       Object.assign(p,{name,brand:$("#pBrand").value.trim(),category_id:$("#pCat").value,short:$("#pShort").value.trim(),description:$("#pDesc").value.trim(),
-        flavors:"",options:G.map(g=>({name:g.name||"خيار",items:g.items.filter(i=>i.name||i.image).map(i=>({name:i.name||g.name,image:i.image||"",price:+i.price>0?+i.price:null,color:isColor(g.name)?i.color||"":"",in_stock:i.in_stock!==false}))})).filter(g=>g.items.length),
+        flavors:"",images:GAL,nutrition:NUT.filter(r=>r[0]&&r[1]),options:G.map(g=>({name:g.name||"خيار",items:g.items.filter(i=>i.name||i.image).map(i=>({name:i.name||g.name,image:i.image||"",price:+i.price>0?+i.price:null,color:isColor(g.name)?i.color||"":"",in_stock:i.in_stock!==false}))})).filter(g=>g.items.length),
         sections:SEC.map(x=>({title:x.title,body:x.body.split("\n").map(l=>l.trim()).filter(l=>l&&!/[:：]$/.test(l)).join("\n")})).filter(x=>x.title&&x.body),price,old_price:old>0?old:null,badge:$("#pBadge").value.trim(),image:imgVal,in_stock:$("#pStock").checked,featured:$("#pFeat").checked,sort:parseInt($("#pSort").value)||0});
       await PSData.save("products",p);await reload();closeM();vProducts();toast("انحفظ ✓");}
     catch(e){say(e.message);b.disabled=false;b.textContent="حفظ المنتج";}};
@@ -528,7 +560,7 @@ function vCats(){
 
 /* ============ الإعدادات ============ */
 const F=[["store_name_ar","اسم المحل بالعربي"],["announcement","الشريط المتحرك فوق","عرض اليوم، كود خصم…"],["hero_title","العنوان الكبير"],["hero_sub","الجملة تحت العنوان","",1],
- ["whatsapp","رقم الواتساب للطلبات","بصيغة 9665xxxxxxxx"],["phone","رقم الاتصال"],["address","العنوان"],["hours","أوقات العمل","",1],["delivery_note","الاستلام والتوصيل"],
+ ["whatsapp","رقم الواتساب للطلبات","بصيغة 9665xxxxxxxx"],["phone","رقم الاتصال"],["address","العنوان"],["hours_short","ساعات العمل المختصرة","تطلع في الواجهة الرئيسية"],["hours","أوقات العمل بالتفصيل","",1],["delivery_note","الاستلام والتوصيل"],
  ["map_url","رابط قوقل ماب"],["rating","تقييم قوقل"],["rating_count","عدد التقييمات"],["instagram","رابط انستقرام"],["snapchat","رابط سناب"],["tiktok","رابط تيك توك"]];
 function vSettings(){const S=D.settings;
   $("#view").innerHTML=`<div class="g2">${F.map(([k,l,ph,ta])=>`<label>${l}${ta?`<textarea data-k="${k}" placeholder="${ph||""}">${esc(S[k])}</textarea>`:`<input data-k="${k}" value="${esc(S[k])}" placeholder="${ph||""}" ${/whatsapp|phone|url|instagram|snapchat|tiktok/.test(k)?'dir="ltr"':""}>`}</label>`).join("")}</div>

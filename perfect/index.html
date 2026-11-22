@@ -264,7 +264,7 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
       <div class="glow"></div><div class="ring"></div><div class="ring r2"></div>
       <div class="hero-img"><img id="heroImg" alt=""></div>
       <div class="tag t1" id="tag1"></div>
-      <div class="tag t2"><small>ساعات العمل</small>يوميًا من العصر لين ١٢ الليل</div>
+      <div class="tag t2"><small>ساعات العمل</small><span id="hShort"></span></div>
     </div>
   </div>
 </section>
@@ -368,7 +368,8 @@ const PS_SEED = {
     hero_title: "وقود عضلاتك… بسعر يرضيك",
     hero_sub: "بروتين، كرياتين، بري ورك أوت وحرق دهون أصلية ١٠٠٪ — ومعها نصيحة صادقة تختار فيها اللي يناسب هدفك.",
     address: "ممشى طريق الهجرة، حي القصواء، المدينة المنورة",
-    hours: "السبت – الخميس: ٤:٣٠ العصر – ١٢:٠٠ الليل\nالجمعة: ٥:٣٠ – ١٠:٣٠ مساءً",
+    hours: "من العصر إلى ١٢ مساءً\nماعدا يوم الجمعة",
+    hours_short: "من العصر إلى ١٢ مساءً ماعدا يوم الجمعة",
     map_url: "https://maps.app.goo.gl/bzPPFJrEcjp335EZ8",
     map_embed: "https://www.google.com/maps?q=24.4234967,39.5825958&z=16&output=embed",
     instagram: "", snapchat: "", tiktok: "",
@@ -520,6 +521,7 @@ const PSU = {
     const f = PSU.flavors(p); return f.length ? [{ name: "النكهة", items: f.map(n => ({ name: n })) }] : [];
   },
   /* محتوى القسم: لو كل سطر فيه «:» يصير جدول */
+  paras: txt => String(txt || "").split(/\n/).map(s => s.trim()).filter(Boolean).map(l => `<p>${PSU.esc(l)}</p>`).join(""),
   section: txt => {
     const lines = String(txt || "").split(/\n/).map(s => s.trim()).filter(Boolean);
     const isTable = lines.length > 1 && lines.every(l => /[:：]/.test(l));
@@ -531,7 +533,7 @@ const PSU = {
 </script>
 <script>
 (async()=>{
-const {esc,num,sar,off,flavors,groups,section}=PSU;
+const {esc,num,sar,off,flavors,groups,section,paras}=PSU;
 const $=s=>document.querySelector(s);
 let D={settings:{},categories:[],products:[]};
 try{D=await PSData.load();}catch(e){console.error(e);D={settings:PS_SEED.settings,categories:PS_SEED.categories,products:PS_SEED.products};}
@@ -553,7 +555,7 @@ $("#stRate").textContent=rA;$("#rBig").textContent=rA;
 $("#rCount").textContent=`${rC} عميل قيّمونا، وأغلبهم يمدحون التعامل والنصيحة والأسعار.`;
 $("#rLink").href=S.map_url;$("#vMap").href=S.map_url;
 $("#heroWa").href=wa("السلام عليكم، عندي استفسار عن المكملات");$("#fab").href=wa("السلام عليكم");
-$("#vAddr").textContent=S.address;$("#vHours").textContent=S.hours;$("#vDel").textContent=S.delivery_note;
+$("#hShort").textContent=S.hours_short||S.hours.split("\n")[0];$("#vAddr").textContent=S.address;$("#vHours").textContent=S.hours;$("#vDel").textContent=S.delivery_note;
 $("#vPhone").textContent=S.phone;$("#vPhone").href="tel:"+S.phone;
 $("#mapFrame").src=S.map_embed;$("#yr").textContent=new Date().getFullYear();
 const socIc={instagram:"IG",snapchat:"SC",tiktok:"TT"};
@@ -613,8 +615,10 @@ function pick(p,sel){let price=+p.price,img=p.image,ok=p.in_stock!==false;const 
   return{label:lab.join(" • "),price,img,ok};}
 function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
   const G=groups(p),sel=G.map(g=>Math.max(0,g.items.findIndex(i=>i.in_stock!==false)));
-  const imgs=[p.image,...G.flatMap(g=>g.items.map(i=>i.image))].filter((v,i,a)=>v&&a.indexOf(v)===i);
-  const tabs=[{title:"الوصف",body:p.description},...(Array.isArray(p.sections)?p.sections:[])].filter(t=>t.title&&t.body);
+  const imgs=[p.image,...(Array.isArray(p.images)?p.images:[]),...G.flatMap(g=>g.items.map(i=>i.image))].filter((v,i,a)=>v&&a.indexOf(v)===i);
+  const nut=(Array.isArray(p.nutrition)?p.nutrition:[]).filter(r=>r&&r[0]&&r[1]);
+  const tabs=[{title:"الوصف والفوائد",html:paras(p.description)},{title:"القيم الغذائية",html:nut.length?'<table class="nt">'+nut.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")+"</table>":""},
+    ...(Array.isArray(p.sections)?p.sections:[]).map(t=>({title:t.title,html:t.body?section(t.body):""}))].filter(t=>t.title&&t.html);
   $("#mbox").innerHTML=`<div class="mi" style="display:flex;flex-direction:column"><div style="position:relative;flex:1"><img id="mimg" src="${esc(p.image)}" alt="${esc(p.name)}"><div class="badges" id="mbd"></div></div>
    ${imgs.length>1?`<div class="thumbs" id="mth">${imgs.map((u,i)=>`<button class="${i?"":"on"}" data-u="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join("")}</div>`:""}</div>
   <div class="mb"><div style="display:flex;justify-content:space-between;align-items:center"><span class="br" style="color:var(--mut);font-size:.8rem;direction:ltr">${esc(p.brand)}</span><button class="x" data-close>×</button></div>
@@ -623,7 +627,7 @@ function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
    ${G.map((g,gi)=>`<div class="og"><b>${esc(g.name)}: <span id="ogl${gi}"></span></b><div class="opts" data-g="${gi}">${g.items.map((it,ii)=>`<button data-i="${ii}" ${it.in_stock===false?"disabled":""} class="${it.image?"im":""}" title="${esc(it.name)}">${it.image?`<img src="${esc(it.image)}" alt="${esc(it.name)}">`:it.color?`<span class="dot" style="background:${esc(it.color)}"></span>${esc(it.name)}`:esc(it.name)}</button>`).join("")}</div></div>`).join("")}
    <div style="display:flex;gap:.6rem;align-items:center"><div class="qty"><button id="mm">−</button><span id="mqv">1</span><button id="mp">+</button></div>
    <button class="btn red" style="flex:1" id="madd"></button></div>
-   ${tabs.some(t=>t.body)?`<div class="tabs" id="mtabs">${tabs.map((t,i)=>`<button class="${i?"":"on"}" data-t="${i}">${esc(t.title)}</button>`).join("")}</div><div class="tabc" id="mtc"></div>`:""}
+   ${tabs.length?`<div class="tabs" id="mtabs">${tabs.map((t,i)=>`<button class="${i?"":"on"}" data-t="${i}">${esc(t.title)}</button>`).join("")}</div><div class="tabc" id="mtc"></div>`:""}
    <a class="btn ghost" target="_blank" rel="noopener" href="${wa(`السلام عليكم، عندي استفسار عن: ${p.name}`)}">اسأل عنه واتساب</a></div>`;
   function upd(){const c=pick(p,sel);const old=+p.old_price>c.price?+p.old_price:0;
     $("#mpr").innerHTML=`<div style="display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap"><b class="cairo" style="font-size:2rem;color:var(--gold)">${num(c.price)}${sar}</b>${old?`<s style="color:var(--mut)">${num(old)}</s> <span class="bd off" style="position:static">وفّر ${num(old-c.price)}${sar}</span>`:""}</div>`;
@@ -633,7 +637,7 @@ function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
   function setImg(u){$("#mimg").src=u;document.querySelectorAll("#mth button").forEach(b=>b.classList.toggle("on",b.dataset.u===u));}
   document.querySelectorAll(".opts").forEach(el=>el.onclick=e=>{const b=e.target.closest("button");if(!b||b.disabled)return;sel[+el.dataset.g]=+b.dataset.i;upd();});
   const th=$("#mth");if(th)th.onclick=e=>{const b=e.target.closest("button");if(b)setImg(b.dataset.u);};
-  const tb=$("#mtabs");if(tb){const show=i=>{$("#mtc").innerHTML=section(tabs[i].body);tb.querySelectorAll("button").forEach(x=>x.classList.toggle("on",+x.dataset.t===i));};tb.onclick=e=>{const b=e.target.closest("button");if(b)show(+b.dataset.t);};show(0);}
+  const tb=$("#mtabs");if(tb){const show=i=>{$("#mtc").innerHTML=tabs[i].html;tb.querySelectorAll("button").forEach(x=>x.classList.toggle("on",+x.dataset.t===i));};tb.onclick=e=>{const b=e.target.closest("button");if(b)show(+b.dataset.t);};show(0);}
   $("#mm").onclick=()=>{mq=Math.max(1,mq-1);$("#mqv").textContent=mq;};$("#mp").onclick=()=>{mq++;$("#mqv").textContent=mq;};
   $("#madd").onclick=()=>{addCart(p,pick(p,sel),mq,$("#madd"));closeAll();setTimeout(openCart,250);};
   upd();modal.classList.add("on");ov.classList.add("on");$("#mbox").scrollTop=0;}
