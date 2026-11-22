@@ -139,12 +139,13 @@ root.position.x = side;
 const OBJ = ['giftbox','snowbox','bottle','pearls','ring','beans','smoke'].includes(sc.type);
 if (mobile && OBJ) { root.position.y = S.heroImg ? -2.2 : -1.45; root.scale.setScalar(0.42); }
 
+const DOT = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,.6)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); return t; })();
 function particles(n, color, size, spread, fall) {
   const geo = new THREE.BufferGeometry();
   const p = new Float32Array(n * 3);
   for (let i = 0; i < n * 3; i++) p[i] = (Math.random() - 0.5) * spread;
   geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  const m = new THREE.PointsMaterial({ color: C(color), size, transparent: true, opacity: 0.85, depthWrite: false, sizeAttenuation: true });
+  const m = new THREE.PointsMaterial({ color: C(color), size: size * 2.2, map: DOT, transparent: true, opacity: 0.9, depthWrite: false, sizeAttenuation: true });
   const pts = new THREE.Points(geo, m);
   scene.add(pts);
   tick.push((t) => {
@@ -269,7 +270,7 @@ if (T === 'giftbox' || T === 'snowbox') {
   const n = mobile ? 220 : 420; const geo = new THREE.BufferGeometry(); const p = new Float32Array(n * 3); const life = new Float32Array(n);
   for (let i = 0; i < n; i++) { life[i] = Math.random(); }
   geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
-  const sm = new THREE.Points(geo, new THREE.PointsMaterial({ color: C(sc.c2), size: 0.35, transparent: true, opacity: 0.28, depthWrite: false }));
+  const sm = new THREE.Points(geo, new THREE.PointsMaterial({ color: C(sc.c2), size: 0.9, map: DOT, transparent: true, opacity: 0.16, depthWrite: false }));
   root.add(sm);
   tick.push((t) => { for (let i = 0; i < n; i++) { life[i] += 0.004; if (life[i] > 1) life[i] = 0; const L = life[i]; p[i*3] = Math.sin(L * 8 + i) * L * 1.2; p[i*3+1] = L * 5.5; p[i*3+2] = Math.cos(L * 6 + i) * L * 0.8; } geo.attributes.position.needsUpdate = true; });
 } else if (T === 'ring') {
