@@ -7,7 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Tajawal',sans-serif;background:#0b0b0f;color:#f2f2f2;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;overflow:hidden}
+  body{font-family:'Tajawal',sans-serif;background:#0b0b0f;color:#f2f2f2;min-height:100vh;text-align:center;overflow-x:hidden}
+  .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .work{padding:90px 6vw 110px;position:relative;z-index:1}
+  .work h2{font-size:clamp(1.8rem,4vw,2.6rem);margin-bottom:10px}
+  .work .sub{color:#9a9aa8;margin-bottom:44px}
+  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;text-align:right}
+  .item{display:block;border:1px solid #23232c;border-radius:18px;overflow:hidden;background:#121218;transition:transform .3s,border-color .3s;text-decoration:none;color:#f2f2f2}
+  .item:hover{transform:translateY(-6px);border-color:#7c5cff}
+  .item .shot{aspect-ratio:16/10;background:#1a1a22;overflow:hidden}
+  .item .shot iframe{width:1280px;height:800px;border:0;transform:scale(.25);transform-origin:top right;pointer-events:none}
+  .item .m{padding:16px 18px}
+  .item .m b{display:block;font-size:1.1rem}
+  .item .m span{color:#9a9aa8;font-size:.9rem}
   .glow{position:fixed;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,#7c5cff55,transparent 70%);top:-160px;left:-160px;filter:blur(20px);animation:float 9s ease-in-out infinite}
   .glow.b{background:radial-gradient(circle,#00d4ff40,transparent 70%);top:auto;left:auto;bottom:-180px;right:-160px;animation-delay:-4s}
   @keyframes float{50%{transform:translate(40px,30px)}}
@@ -21,10 +33,25 @@
 </head>
 <body>
 <div class="glow"></div><div class="glow b"></div>
-<main>
+<section class="hero"><main>
   <h1><span>ميدو ستوديو</span></h1>
   <p>نصمم مواقع ومتاجر تخلي عملاءك يثقون فيك من أول نظرة.<br>مواقع للمحلات، صفحات للمتاجر، وتصاميم تبيع.</p>
   <a class="btn" href="https://wa.me/966597774066" target="_blank" rel="noopener">تواصل معنا على الواتساب</a>
-</main>
+</main></section>
+<section class="work" id="work">
+  <h2>أعمالنا</h2>
+  <p class="sub">تصاميم سويناها لمتاجر سعودية</p>
+  <div class="gal" id="gal"></div>
+</section>
+<script>
+const W=[
+ {u:'fidha/',n:'متجر فضّة',d:'خواتم رجالية فضة وسبح'},
+ {u:'https://vilo-sa.com/',n:'فيلو',d:'منتجات البحر والشاطئ'}
+];
+const g=document.getElementById('gal');
+g.innerHTML=W.map(w=>`<a class="item" href="${w.u}" target="_blank" rel="noopener"><div class="shot"><iframe src="${w.u}" loading="lazy" tabindex="-1" title="${w.n}"></iframe></div><div class="m"><b>${w.n}</b><span>${w.d}</span></div></a>`).join('');
+function fit(){document.querySelectorAll('.item .shot').forEach(s=>{const f=s.querySelector('iframe');f.style.transform='scale('+(s.clientWidth/1280)+')'})}
+addEventListener('resize',fit);fit();
+</script>
 </body>
 </html>
