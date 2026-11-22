@@ -137,7 +137,7 @@ const mobile = innerWidth < 900;
 const side = sc.center || S.layout === 'center' ? 0 : mobile ? 0 : -2.6;
 root.position.x = side;
 const OBJ = ['giftbox','snowbox','bottle','pearls','ring'].includes(sc.type);
-if (mobile && OBJ) { root.position.y = S.heroImg ? -2.4 : -1.95; root.scale.setScalar(0.46); }
+if (mobile && OBJ) { root.position.y = S.heroImg ? -2.2 : -1.45; root.scale.setScalar(0.42); }
 
 function particles(n, color, size, spread, fall) {
   const geo = new THREE.BufferGeometry();
