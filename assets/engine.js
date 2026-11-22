@@ -136,7 +136,8 @@ const mobile = innerWidth < 900;
 // place object to the visual side (left in RTL layouts)
 const side = sc.center || S.layout === 'center' ? 0 : mobile ? 0 : -2.6;
 root.position.x = side;
-if (mobile && S.layout !== 'center') { root.position.y = -2.2; root.scale.setScalar(0.62); }
+const OBJ = ['giftbox','snowbox','bottle','pearls','ring'].includes(sc.type);
+if (mobile && OBJ) { root.position.y = S.heroImg ? -2.4 : -1.95; root.scale.setScalar(0.46); }
 
 function particles(n, color, size, spread, fall) {
   const geo = new THREE.BufferGeometry();

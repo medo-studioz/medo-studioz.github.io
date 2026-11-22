@@ -122,3 +122,5 @@ footer a:hover{color:var(--acc)}
 .cursor{position:fixed;top:0;left:0;width:14px;height:14px;border-radius:50%;background:var(--acc);pointer-events:none;z-index:250;mix-blend-mode:difference;transform:translate(-50%,-50%);transition:width .25s,height .25s}
 .cursor.big{width:64px;height:64px}
 @media(hover:none){.cursor{display:none}}
+
+@media(max-width:900px){.hero{align-items:start;min-height:100svh}.hero .in{padding-top:5vh;padding-bottom:40vh}.L-split .hero .pic,.L-edit .hero .pic{margin-top:-36vh}.hero h1{font-size:clamp(2.6rem,13vw,4.2rem)}}
