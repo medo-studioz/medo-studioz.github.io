@@ -16,7 +16,10 @@
   .item{display:block;border:1px solid #23232c;border-radius:18px;overflow:hidden;background:#121218;transition:transform .3s,border-color .3s;text-decoration:none;color:#f2f2f2}
   .item:hover{transform:translateY(-6px);border-color:#7c5cff}
   .item .shot{aspect-ratio:16/10;background:#1a1a22;overflow:hidden}
-  .item .shot iframe{width:1280px;height:800px;border:0;transform:scale(.25);transform-origin:top right;pointer-events:none}
+  .item .shot{display:grid;place-items:center}
+  .item .shot img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+  .item:hover .shot img{transform:scale(1.06)}
+  .item .shot span{font-size:2rem;font-weight:800;color:#fff}
   .item .m{padding:16px 18px}
   .item .m b{display:block;font-size:1.1rem}
   .item .m span{color:#9a9aa8;font-size:.9rem}
@@ -45,13 +48,11 @@
 </section>
 <script>
 const W=[
- {u:'fidha/',n:'متجر فضّة',d:'خواتم رجالية فضة وسبح'},
- {u:'https://vilo-sa.com/',n:'فيلو',d:'منتجات البحر والشاطئ'}
+ {u:'fidha/',n:'متجر فضّة',d:'خواتم رجالية فضة وسبح',i:'https://cdn.salla.sa/form-builder/iE4eHiFN2qKKSMSI5DluZjbFX5u8wJZ1HJkH3zCf.jpg',bg:'#0c0d10'},
+ {u:'https://vilo-sa.com/',n:'فيلو',d:'منتجات البحر والشاطئ',bg:'linear-gradient(135deg,#0e4f6e,#5fc3d8)'}
 ];
 const g=document.getElementById('gal');
-g.innerHTML=W.map(w=>`<a class="item" href="${w.u}" target="_blank" rel="noopener"><div class="shot"><iframe src="${w.u}" loading="lazy" tabindex="-1" title="${w.n}"></iframe></div><div class="m"><b>${w.n}</b><span>${w.d}</span></div></a>`).join('');
-function fit(){document.querySelectorAll('.item .shot').forEach(s=>{const f=s.querySelector('iframe');f.style.transform='scale('+(s.clientWidth/1280)+')'})}
-addEventListener('resize',fit);fit();
+g.innerHTML=W.map(w=>`<a class="item" href="${w.u}" target="_blank" rel="noopener"><div class="shot" style="background:${w.bg}">${w.i?`<img src="${w.i}" alt="${w.n}" loading="lazy">`:`<span>${w.n}</span>`}</div><div class="m"><b>${w.n}</b><span>${w.d}</span></div></a>`).join('');
 </script>
 </body>
 </html>
