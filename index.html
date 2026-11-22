@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ميدو ستوديو | تصميم مواقع ومتاجر</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Tajawal',sans-serif;background:#0b0b0f;color:#f2f2f2;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;overflow:hidden}
+  .glow{position:fixed;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,#7c5cff55,transparent 70%);top:-160px;left:-160px;filter:blur(20px);animation:float 9s ease-in-out infinite}
+  .glow.b{background:radial-gradient(circle,#00d4ff40,transparent 70%);top:auto;left:auto;bottom:-180px;right:-160px;animation-delay:-4s}
+  @keyframes float{50%{transform:translate(40px,30px)}}
+  main{position:relative;z-index:1;max-width:620px}
+  h1{font-size:clamp(2.2rem,7vw,3.6rem);font-weight:800;margin-bottom:14px}
+  h1 span{background:linear-gradient(90deg,#7c5cff,#00d4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  p{font-size:1.15rem;color:#b9b9c6;line-height:1.9;margin-bottom:28px}
+  a.btn{display:inline-block;background:linear-gradient(90deg,#7c5cff,#00d4ff);color:#fff;text-decoration:none;font-weight:700;padding:14px 34px;border-radius:999px;transition:transform .2s}
+  a.btn:hover{transform:translateY(-3px)}
+</style>
+</head>
+<body>
+<div class="glow"></div><div class="glow b"></div>
+<main>
+  <h1><span>ميدو ستوديو</span></h1>
+  <p>نصمم مواقع ومتاجر تخلي عملاءك يثقون فيك من أول نظرة.<br>مواقع للمحلات، صفحات للمتاجر، وتصاميم تبيع.</p>
+  <a class="btn" href="https://wa.me/966597774066" target="_blank" rel="noopener">تواصل معنا على الواتساب</a>
+</main>
+</body>
+</html>
