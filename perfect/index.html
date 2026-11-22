@@ -333,8 +333,8 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
    بعد ما تسوي مشروع Supabase، حط الرابط والمفتاح هنا.
    إذا تركتهم فاضيين، الموقع يشتغل بوضع التجربة (يحفظ في المتصفح فقط). */
 const PS_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://sfvttxcivlidsnwvizmc.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmdnR0eGNpdmxpZHNud3Zpem1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUzNTYwODMsImV4cCI6MjExMDkzMjA4M30.-Kjv038mdfT1RZL9Oa9wIWV02e2SeSt7WU0HbKCJEUs",
   DEMO_PASSWORD: "admin123"
 };
 /* ================================================== */
@@ -436,8 +436,9 @@ const PSData = (() => {
     async login(email, pass) {
       if (!live) { if (pass === PS_CONFIG.DEMO_PASSWORD) { sessionStorage.setItem("ps_demo_auth", "1"); return true; } throw new Error("كلمة المرور غلط"); }
       const c = await client();
+      if (!email.includes("@")) email = email.toLowerCase() + "@perfect-supplement.store";
       const { error } = await c.auth.signInWithPassword({ email, password: pass });
-      if (error) throw new Error("الإيميل أو كلمة المرور غلط");
+      if (error) throw new Error("اسم المستخدم أو كلمة المرور غلط");
       return true;
     },
     async session() {
