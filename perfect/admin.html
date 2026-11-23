@@ -96,6 +96,15 @@ td .nm{font-weight:700}td .sb{color:var(--mut);font-size:.8rem}
 .opt{display:grid;grid-template-columns:52px 1fr 110px auto auto auto;gap:.5rem;align-items:center}
 .oimg{width:52px;height:52px;border-radius:10px;border:1px dashed var(--line);display:grid;place-items:center;cursor:pointer;overflow:hidden;background:var(--bg);font-size:1.1rem;color:var(--mut);position:relative}
 .oimg img{width:100%;height:100%;object-fit:cover}
+.oimg .ocnt{position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.75);color:#fff;font-size:.7rem;font-weight:800;border-radius:6px;padding:0 .3rem}
+.ostrip{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.4rem;padding-inline-start:60px}
+.ostrip .ot{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
+.ostrip .ot img{width:100%;height:100%;object-fit:cover}
+.ostrip .ot i{position:absolute;bottom:0;inset-inline:0;background:rgba(231,184,79,.9);color:#17120a;font-size:.6rem;font-style:normal;font-weight:800;text-align:center}
+.ostrip .ot button{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:6px;background:rgba(0,0,0,.75);font-size:.65rem;color:#fff}
+.ostrip .ot button.mk{left:auto;right:2px;color:#f5c443}
+.ostrip .ot.add{display:grid;place-items:center;align-content:center;border:1px dashed var(--gold);color:var(--gold);font-size:1.2rem;line-height:1}.ostrip .ot.add small{font-size:.65rem}
+.ostrip .ot.add.busy{opacity:.5}
 .oimg.busy:after{content:"…";position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.6)}
 input[type=color]{width:42px;height:42px;padding:3px;border-radius:10px}
 .ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;flex:none}
@@ -104,7 +113,7 @@ input[type=color]{width:42px;height:42px;padding:3px;border-radius:10px}
 .chipb:hover{background:rgba(231,184,79,.1)}
 .mini{flex-direction:row;align-items:center;gap:.35rem;font-size:.8rem;color:var(--mut);font-weight:500;white-space:nowrap}
 @media(max-width:860px){.opt{grid-template-columns:52px 1fr auto 38px;grid-template-areas:"i n n d" "i p c s";padding-bottom:.6rem;border-bottom:1px solid var(--line)}
- .opt .oimg{grid-area:i;align-self:start}.opt .onm{grid-area:n}.opt .op{grid-area:p}.opt .oc{grid-area:c}.opt .os{grid-area:s}.opt .od{grid-area:d}}
+ .opt .oimg{grid-area:i;align-self:start}.ostrip{grid-column:1/-1;grid-row:3;padding-inline-start:0}.opt .onm{grid-area:n}.opt .op{grid-area:p}.opt .oc{grid-area:c}.opt .os{grid-area:s}.opt .od{grid-area:d}}
 .gal{display:flex;flex-wrap:wrap;gap:.5rem}
 .gal .gi{position:relative;width:92px;height:92px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
 .gal .gi img{width:100%;height:100%;object-fit:cover}
@@ -592,7 +601,7 @@ function editP(p){
    <label>شارة <small>(اختياري)</small><input id="pBadge" value="${esc(p.badge)}" placeholder="الأكثر طلبًا / العلبتين بـ 100"></label></div>
   <div class="prev" id="prev"></div>
   <div class="blk"><div class="hd"><h3>🎨 الخيارات</h3><button class="chipb" data-ag="اللون">＋ ألوان</button><button class="chipb" data-ag="الحجم">＋ أحجام</button><button class="chipb" data-ag="النكهة">＋ نكهات</button><button class="chipb" data-ag="">＋ خيار آخر</button></div>
-   <div class="hint">مثلًا شنطة بألوان مختلفة: لكل لون حط صورته، ولما يختاره الزبون تتغير الصورة. السعر اتركه فاضي إذا نفس سعر المنتج.</div><div id="grps"></div></div>
+   <div class="hint">اضغط 📷 جنب أي خيار وارفع صوره (تقدر تختار أكثر من صورة مرة وحدة). لما يختاره الزبون تطلع صوره. السعر اتركه فاضي إذا نفس سعر المنتج.</div><div id="grps"></div></div>
   <label>الوصف والفوائد <small>اكتب براحتك، وكل فائدة في سطر</small><textarea id="pDesc" placeholder="مثال:&#10;يساعد على بناء العضلات واستشفائها بعد التمرين&#10;سريع الامتصاص وقليل الدهون&#10;مناسب للتنشيف والتضخيم">${esc(p.description)}</textarea></label>
   <div class="blk"><div class="hd"><h3>🥗 جدول القيم الغذائية</h3><button class="chipb" id="nAdd">＋ صف جديد</button></div>
    <div class="hint">اكتب القيمة جنب كل سطر (للحصة الواحدة). السطر اللي تخليه فاضي ما يطلع للزبون، وتقدر تغيّر أسماء السطور.</div><div id="nut" style="display:flex;flex-direction:column;gap:.5rem"></div></div>
@@ -616,28 +625,32 @@ function editP(p){
     $("#prev").innerHTML=`<span style="color:var(--mut)">كذا يطلع السعر في الموقع:</span><b class="p">${num(pr)}${sar}</b>${o?`<s style="color:var(--mut)">${num(ol)}</s><span class="pct">-${num(o)}٪</span>`:""}`;}
   ["pPrice","pOld"].forEach(i=>$("#"+i).oninput=updPrev);updPrev();
   /* ---- الخيارات ---- */
-  let G=JSON.parse(JSON.stringify(groups(p))).map(g=>({name:g.name,items:g.items.map(i=>Object.assign({name:"",image:"",price:"",color:"",in_stock:true},i))}));
+  let G=JSON.parse(JSON.stringify(groups(p))).map(g=>({name:g.name,items:g.items.map(i=>{const o=Object.assign({name:"",image:"",price:"",color:"",in_stock:true},i);o.images=(Array.isArray(i.images)&&i.images.length?i.images:[i.image]).filter(Boolean);return o;})}));
   let SEC=JSON.parse(JSON.stringify(Array.isArray(p.sections)?p.sections:[]));
   const isColor=n=>/لون|ألوان|الوان|color/i.test(n||"");
   function syncG(){document.querySelectorAll("#grps .grp").forEach((el,gi)=>{G[gi].name=el.querySelector("[data-gn]").value.trim();
     el.querySelectorAll(".opt").forEach((o,ii)=>{const it=G[gi].items[ii];it.name=o.querySelector("[data-on]").value.trim();it.price=o.querySelector("[data-op]").value;
       const c=o.querySelector("[data-oc]");if(c)it.color=c.value;it.in_stock=o.querySelector("[data-os]").checked;});});}
   function drawG(){$("#grps").innerHTML=G.map((g,gi)=>`<div class="grp"><div class="row"><input data-gn value="${esc(g.name)}" placeholder="اسم الخيار: اللون، الحجم…" style="font-weight:700"><button class="ib" data-dg="${gi}" title="حذف المجموعة">🗑</button></div>
-    ${g.items.map((it,ii)=>`<div class="opt"><div class="oimg" data-oi="${gi}:${ii}" title="صورة هذا الخيار">${it.image?`<img src="${esc(it.image)}">`:"📷"}</div>
+    ${g.items.map((it,ii)=>`<div class="opt"><div class="oimg" data-oi="${gi}:${ii}" title="أضف صور لهذا الخيار">${it.images.length?`<img src="${esc(it.images[0])}"><span class="ocnt">${it.images.length}</span>`:"📷"}</div>
       <input data-on class="onm" value="${esc(it.name)}" placeholder="${isColor(g.name)?"أحمر":"الاسم"}">
       <input data-op class="op" type="number" min="0" step="0.01" value="${it.price??""}" placeholder="سعر خاص">
       ${isColor(g.name)&&!it.image?`<input data-oc class="oc" type="color" value="${esc(it.color||"#222222")}" title="لون الدائرة">`:`<span class="oc"></span>`}
       <label class="mini os"><input data-os type="checkbox" style="width:auto" ${it.in_stock!==false?"checked":""}>متوفر</label>
-      <button class="ib od" data-do="${gi}:${ii}" title="حذف">✕</button></div>`).join("")}
+      <button class="ib od" data-do="${gi}:${ii}" title="حذف">✕</button>
+      ${it.images.length?`<div class="ostrip">${it.images.map((u,k)=>`<div class="ot"><img src="${esc(u)}">${k?"":`<i>الأساسية</i>`}<button data-od="${gi}:${ii}:${k}" title="حذف الصورة">✕</button>${k?`<button class="mk" data-om="${gi}:${ii}:${k}" title="خلّها الأساسية">★</button>`:""}</div>`).join("")}<button class="ot add" data-oi="${gi}:${ii}" title="أضف صور">＋<small>صور</small></button></div>`:""}</div>`).join("")}
     <button class="chipb" data-ao="${gi}" style="align-self:flex-start">＋ إضافة ${esc(g.name||"خيار")}</button></div>`).join("");}
-  $("#grps").onclick=async e=>{const t=e.target.closest("[data-dg],[data-do],[data-ao],[data-oi]");if(!t)return;syncG();
+  $("#grps").onclick=async e=>{const t=e.target.closest("[data-dg],[data-do],[data-ao],[data-oi],[data-od],[data-om]");if(!t)return;syncG();
+    if(t.dataset.od){const[a,b,k]=t.dataset.od.split(":").map(Number);G[a].items[b].images.splice(k,1);drawG();return;}
+    if(t.dataset.om){const[a,b,k]=t.dataset.om.split(":").map(Number);const im=G[a].items[b].images;im.unshift(im.splice(k,1)[0]);drawG();return;}
     if(t.dataset.dg!==undefined){if(!await ask("تحذف هذي المجموعة كاملة؟","احذف"))return;G.splice(+t.dataset.dg,1);drawG();}
     else if(t.dataset.do){const[a,b]=t.dataset.do.split(":").map(Number);G[a].items.splice(b,1);if(!G[a].items.length)G.splice(a,1);drawG();}
-    else if(t.dataset.ao!==undefined){G[+t.dataset.ao].items.push({name:"",image:"",price:"",color:"",in_stock:true});drawG();const o=$("#grps").querySelectorAll(`.grp`)[+t.dataset.ao].querySelectorAll("[data-on]");o[o.length-1].focus();}
-    else if(t.dataset.oi){const[a,b]=t.dataset.oi.split(":").map(Number);const f=document.createElement("input");f.type="file";f.accept="image/*";
-      f.onchange=async()=>{if(!f.files[0])return;t.classList.add("busy");try{const bl=await compress(f.files[0]);G[a].items[b].image=await PSData.uploadImage(bl);syncG();drawG();}catch(er){t.classList.remove("busy");say(er.message);}};f.click();}};
+    else if(t.dataset.ao!==undefined){G[+t.dataset.ao].items.push({name:"",image:"",images:[],price:"",color:"",in_stock:true});drawG();const o=$("#grps").querySelectorAll(`.grp`)[+t.dataset.ao].querySelectorAll("[data-on]");o[o.length-1].focus();}
+    else if(t.dataset.oi){const[a,b]=t.dataset.oi.split(":").map(Number);const f=document.createElement("input");f.type="file";f.accept="image/*";f.multiple=true;
+      f.onchange=async()=>{const fs=[...f.files];if(!fs.length)return;const box=$("#grps").querySelectorAll(".grp")[a].querySelectorAll(".opt")[b];box.querySelectorAll("[data-oi]").forEach(x=>x.classList.add("busy"));
+        for(const x of fs){try{G[a].items[b].images.push(await PSData.uploadImage(await compress(x)));}catch(er){say(er.message);}}syncG();drawG();};f.click();}};
   $("#grps").addEventListener("change",e=>{if(e.target.matches("[data-gn]")){syncG();drawG();}});
-  document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=()=>{syncG();G.push({name:b.dataset.ag,items:[{name:"",image:"",price:"",color:"",in_stock:true}]});drawG();
+  document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=()=>{syncG();G.push({name:b.dataset.ag,items:[{name:"",image:"",images:[],price:"",color:"",in_stock:true}]});drawG();
     const gs=$("#grps").querySelectorAll(".grp");const last=gs[gs.length-1];(b.dataset.ag?last.querySelector("[data-on]"):last.querySelector("[data-gn]")).focus();});
   drawG();
   /* ---- الأقسام ---- */
@@ -681,7 +694,7 @@ function editP(p){
     b.disabled=true;b.textContent="جاري الحفظ…";
     try{if(blob)imgVal=await PSData.uploadImage(blob);
       Object.assign(p,{name,brand:$("#pBrand").value.trim(),category_id:$("#pCat").value,short:$("#pShort").value.trim(),description:$("#pDesc").value.trim(),
-        flavors:"",goals:[...document.querySelectorAll("#pGoals input:checked")].map(i=>i.value),images:GAL,nutrition:NUT.filter(r=>r[0]&&r[1]),options:G.map(g=>({name:g.name||"خيار",items:g.items.filter(i=>i.name||i.image).map(i=>({name:i.name||g.name,image:i.image||"",price:+i.price>0?+i.price:null,color:isColor(g.name)?i.color||"":"",in_stock:i.in_stock!==false}))})).filter(g=>g.items.length),
+        flavors:"",goals:[...document.querySelectorAll("#pGoals input:checked")].map(i=>i.value),images:GAL,nutrition:NUT.filter(r=>r[0]&&r[1]),options:G.map(g=>({name:g.name||"خيار",items:g.items.filter(i=>i.name||i.images.length).map(i=>({name:i.name||g.name,image:i.images[0]||"",images:i.images,price:+i.price>0?+i.price:null,color:isColor(g.name)?i.color||"":"",in_stock:i.in_stock!==false}))})).filter(g=>g.items.length),
         sections:SEC.map(x=>({title:x.title,body:x.body.split("\n").map(l=>l.trim()).filter(l=>l&&!/[:：]$/.test(l)).join("\n")})).filter(x=>x.title&&x.body),price,old_price:old>0?old:null,badge:$("#pBadge").value.trim(),image:imgVal,in_stock:$("#pStock").checked,featured:$("#pFeat").checked,sort:parseInt($("#pSort").value)||0});
       await PSData.save("products",p);await reload();closeM();vProducts();toast("انحفظ ✓");}
     catch(e){say(e.message);b.disabled=false;b.textContent="حفظ المنتج";}};

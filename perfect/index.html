@@ -876,13 +876,13 @@ function tilt(){if(matchMedia("(hover:none)").matches)return;document.querySelec
 /* نافذة المنتج */
 const modal=$("#modal"),ov=$("#ov");let mq=1;
 /* السعر والصورة حسب الخيارات المختارة */
-function pick(p,sel){let price=+p.price,img=p.image,ok=p.in_stock!==false;const lab=[];
+const itemImgs=it=>(Array.isArray(it.images)&&it.images.length?it.images:[it.image]).filter(Boolean);
+function pick(p,sel){let price=+p.price,img=p.image,ok=p.in_stock!==false;const lab=[],oi=[];
   groups(p).forEach((g,i)=>{const it=g.items[sel[i]];if(!it)return;lab.push(groups(p).length>1||g.name!=="النكهة"?`${g.name}: ${it.name}`:it.name);
-    if(+it.price>0)price=+it.price;if(it.image)img=it.image;if(it.in_stock===false)ok=false;});
-  return{label:lab.join(" • "),price,img,ok,sel:[...sel]};}
+    if(+it.price>0)price=+it.price;const ii=itemImgs(it);if(ii.length){img=ii[0];oi.push(...ii);}if(it.in_stock===false)ok=false;});
+  return{label:lab.join(" • "),price,img,ok,sel:[...sel],imgs:oi};}
 function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
   const G=groups(p),sel=G.map(g=>Math.max(0,g.items.findIndex(i=>i.in_stock!==false)));
-  const imgs=[p.image,...(Array.isArray(p.images)?p.images:[]),...G.flatMap(g=>g.items.map(i=>i.image))].filter((v,i,a)=>v&&a.indexOf(v)===i);
   const nut=(Array.isArray(p.nutrition)?p.nutrition:[]).filter(r=>r&&r[0]&&r[1]);
   const tabs=[{title:"الوصف والفوائد",html:paras(p.description)},{title:"القيم الغذائية",html:nut.length?'<table class="nt">'+nut.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")+"</table>":""},
     ...(Array.isArray(p.sections)?p.sections:[]).map(t=>({title:t.title,html:t.body?section(t.body):""}))].filter(t=>t.title&&t.html);
@@ -891,11 +891,11 @@ function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
     +R.list.map(r=>`<div class="rv-item"><div>${PSU.stars(r.rating)} <b>${esc(r.name||"عميل")}</b><small>${PSU.date(r.created_at)}</small></div>${r.body?`<p>${esc(r.body)}</p>`:""}</div>`).join("")
     :`<p>ما فيه تقييمات للحين. كن أول واحد يقيّم هذا المنتج بعد ما تستلمه.</p>`}<div id="rvForm" style="margin-top:.6rem"></div><button class="btn ghost" data-wr style="margin-top:.4rem;padding:.6rem 1rem">✍️ اكتب تقييمك</button>`});
   $("#mbox").innerHTML=`<div class="mi" style="display:flex;flex-direction:column"><div style="position:relative;flex:1"><img id="mimg" src="${esc(p.image)}" alt="${esc(p.name)}"><div class="badges" id="mbd"></div></div>
-   ${imgs.length>1?`<div class="thumbs" id="mth">${imgs.map((u,i)=>`<button class="${i?"":"on"}" data-u="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join("")}</div>`:""}</div>
+   <div class="thumbs" id="mth"></div></div>
   <div class="mb"><div style="display:flex;justify-content:space-between;align-items:center"><span class="br" style="color:var(--mut);font-size:.8rem;direction:ltr">${esc(p.brand)}</span><button class="x" data-close>×</button></div>
    <h2 style="font-size:1.6rem">${esc(p.name)}</h2>${R.n?`<div class="rt" style="color:var(--mut);font-size:.85rem">${PSU.stars(R.avg)} ${num(R.avg.toFixed(1))} • ${num(R.n)} تقييم</div>`:""}<div style="color:var(--gold2);font-weight:700">${esc(p.short)}</div>
    <div id="mpr"></div>
-   ${G.map((g,gi)=>`<div class="og"><b>${esc(g.name)}: <span id="ogl${gi}"></span></b><div class="opts" data-g="${gi}">${g.items.map((it,ii)=>`<button data-i="${ii}" ${it.in_stock===false?"disabled":""} class="${it.image?"im":""}" title="${esc(it.name)}">${it.image?`<img src="${esc(it.image)}" alt="${esc(it.name)}">`:it.color?`<span class="dot" style="background:${esc(it.color)}"></span>${esc(it.name)}`:esc(it.name)}</button>`).join("")}</div></div>`).join("")}
+   ${G.map((g,gi)=>`<div class="og"><b>${esc(g.name)}: <span id="ogl${gi}"></span></b><div class="opts" data-g="${gi}">${g.items.map((it,ii)=>`<button data-i="${ii}" ${it.in_stock===false?"disabled":""} class="${itemImgs(it)[0]?"im":""}" title="${esc(it.name)}">${itemImgs(it)[0]?`<img src="${esc(itemImgs(it)[0])}" alt="${esc(it.name)}">`:it.color?`<span class="dot" style="background:${esc(it.color)}"></span>${esc(it.name)}`:esc(it.name)}</button>`).join("")}</div></div>`).join("")}
    <div style="display:flex;gap:.6rem;align-items:center"><div class="qty"><button id="mm">−</button><span id="mqv">1</span><button id="mp">+</button></div>
    <button class="btn red" style="flex:1" id="madd"></button></div>
    ${tabs.length?`<div class="tabs" id="mtabs">${tabs.map((t,i)=>`<button class="${i?"":"on"}" data-t="${i}">${esc(t.title)}</button>`).join("")}</div><div class="tabc" id="mtc"></div>`:""}
@@ -903,6 +903,8 @@ function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
   function upd(){const c=pick(p,sel);const old=+p.old_price>c.price?+p.old_price:0;
     $("#mpr").innerHTML=`<div style="display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap"><b class="cairo" style="font-size:2rem;color:var(--gold)">${num(c.price)}${sar}</b>${old?`<s style="color:var(--mut)">${num(old)}</s> <span class="bd off" style="position:static">وفّر ${num(old-c.price)}${sar}</span>`:""}</div>`;
     const o=old?Math.round((1-c.price/old)*100):0;$("#mbd").innerHTML=`${p.badge?`<span class="bd">${esc(p.badge)}</span>`:"<span></span>"}${o?`<span class="bd off">-${num(o)}٪</span>`:""}`;
+    const L=[...c.imgs,p.image,...(Array.isArray(p.images)?p.images:[])].filter((v,i,a)=>v&&a.indexOf(v)===i);
+    $("#mth").innerHTML=L.length>1?L.map(u=>`<button data-u="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join(""):"";$("#mth").style.display=L.length>1?"":"none";
     setImg(c.img);G.forEach((g,gi)=>{$("#ogl"+gi).textContent=g.items[sel[gi]]?.name||"";document.querySelectorAll(`.opts[data-g="${gi}"] button`).forEach(b=>b.classList.toggle("on",+b.dataset.i===sel[gi]));});
     const b=$("#madd");b.disabled=!c.ok;b.textContent=c.ok?"أضف للسلة":"نفدت الكمية";}
   function setImg(u){$("#mimg").src=u;document.querySelectorAll("#mth button").forEach(b=>b.classList.toggle("on",b.dataset.u===u));}
