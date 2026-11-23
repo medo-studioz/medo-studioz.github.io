@@ -97,15 +97,20 @@ section{padding:5rem 0}
 .offer s{color:var(--mut)}
 /* الفلاتر */
 .tools{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-bottom:1.6rem}
-.chips{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;flex:1}
+.chipwrap{position:relative;margin:-.4rem 0 1.4rem}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+@media(max-width:820px){.chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+ .chips .chip{scroll-snap-align:start}
+ .chipwrap:after{content:"";position:absolute;top:0;bottom:4px;left:0;width:42px;pointer-events:none;background:linear-gradient(90deg,var(--bg),transparent);transition:opacity .2s}
+ .chipwrap.end:after{opacity:0}}
 .chips::-webkit-scrollbar{display:none}
 .chip{white-space:nowrap;padding:.55rem 1.1rem;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:700;color:#cfccd5;transition:.2s}
-.chip.on,.chip:hover{background:var(--red);border-color:var(--red);color:var(--ink)}
-.search{position:relative;flex:0 1 280px}
+.chip.on{background:var(--red);border-color:var(--red);color:var(--ink)}@media(hover:hover){.chip:hover{border-color:var(--red);color:var(--gold2)}}
+.search{position:relative;flex:1 1 280px}
 .search input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--txt);padding:.75rem 2.6rem .75rem 1rem;font:inherit;outline:none}
 .search input:focus{border-color:var(--gold)}
 .search svg{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);opacity:.6}
-@media(max-width:700px){.search{flex:1 1 100%}}
+@media(max-width:700px){.search{flex:1 1 0;min-width:0}.tools{flex-wrap:nowrap}}
 /* المنتجات */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.2rem}
 @media(max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:.75rem}}
@@ -336,7 +341,6 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
   <div class="wrap">
     <div class="sh rv"><div><div class="kicker">المتجر</div><h2>كل اللي يحتاجه <em>تمرينك</em></h2></div></div>
     <div class="tools rv">
-      <div class="chips" id="chips"></div>
       <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" placeholder="دوّر على منتج…"></label>
       <button class="fbtn" id="fToggle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>فلترة<span id="fCount"></span></button>
@@ -349,6 +353,7 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
       <div class="ftg"><label class="tg"><input type="checkbox" id="fOff"><span></span>عليه خصم</label><label class="tg"><input type="checkbox" id="fStock"><span></span>المتوفر بس</label></div>
       <button class="fclr" id="fClear">مسح الفلاتر</button>
     </div>
+    <div class="chipwrap"><div class="chips" id="chips"></div></div>
     <div class="rescount" id="resCount"></div>
     <div class="grid" id="grid"></div>
   </div>
@@ -815,6 +820,7 @@ const rate=id=>{const r=RV.filter(x=>x.product_id===id);return r.length?{avg:r.r
 const minPrice=p=>Math.min(+p.price,...groups(p).flatMap(g=>g.items.map(i=>+i.price>0?+i.price:Infinity)));
 const used=D.categories.filter(c=>D.products.some(p=>p.category_id===c.id));
 $("#chips").innerHTML=`<button class="chip on" data-c="all">الكل</button>`+used.map(c=>`<button class="chip" data-c="${c.id}">${esc(c.name)}</button>`).join("");
+const chW=$("#chips"),upFade=()=>chW.parentElement.classList.toggle("end",Math.abs(chW.scrollLeft)+chW.clientWidth>=chW.scrollWidth-4);chW.addEventListener("scroll",upFade,{passive:true});addEventListener("resize",upFade);setTimeout(upFade,50);
 $("#chips").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;cat=b.dataset.c;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x===b));render();};
 $("#q").oninput=e=>{q=e.target.value.trim();render();};
 /* الأهداف */
