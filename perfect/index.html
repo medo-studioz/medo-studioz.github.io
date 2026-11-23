@@ -883,8 +883,12 @@ function pick(p,sel){let price=+p.price,img=p.image,ok=p.in_stock!==false;const 
   return{label:lab.join(" • "),price,img,ok,sel:[...sel],imgs:oi};}
 function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
   const G=groups(p),sel=G.map(g=>Math.max(0,g.items.findIndex(i=>i.in_stock!==false)));
-  const nut=(Array.isArray(p.nutrition)?p.nutrition:[]).filter(r=>r&&r[0]&&r[1]);
-  const tabs=[{title:"الوصف والفوائد",html:paras(p.description)},{title:"القيم الغذائية",html:nut.length?'<table class="nt">'+nut.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")+"</table>":""},
+  const okR=a=>(Array.isArray(a)?a:[]).filter(r=>r&&r[0]&&r[1]);const nut=okR(p.nutrition);
+  const anyOptNut=G.some(g=>g.items.some(i=>okR(i.nutrition).length));
+  const nutHTML=()=>{let rows=nut,who="";G.forEach((g,gi)=>{const it=g.items[sel[gi]];if(it&&okR(it.nutrition).length){rows=okR(it.nutrition);who=it.name;}});
+    if(!rows.length)return`<p style="color:var(--mut)">ما فيه جدول قيم غذائية لهالاختيار.</p>`;
+    return(who?`<p style="color:var(--cy);font-weight:700;margin-bottom:.4rem">القيم الغذائية لـ«${esc(who)}»</p>`:"")+'<table class="nt">'+rows.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")+"</table>";};
+  const tabs=[{title:"الوصف والفوائد",html:paras(p.description)},{title:"القيم الغذائية",nut:true,html:nut.length||anyOptNut?"1":""},
     ...(Array.isArray(p.sections)?p.sections:[]).map(t=>({title:t.title,html:t.body?section(t.body):""}))].filter(t=>t.title&&t.html);
   const R=rate(p.id);
   tabs.push({title:R.n?`التقييمات (${num(R.n)})`:"التقييمات",rev:true,html:`${R.n?`<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem"><b class="cairo" style="font-size:2rem;color:var(--gold)">${num(R.avg.toFixed(1))}</b>${PSU.stars(R.avg,"lg")}<small style="color:var(--mut)">${num(R.n)} تقييم</small></div>`
@@ -900,7 +904,8 @@ function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
    <button class="btn red" style="flex:1" id="madd"></button></div>
    ${tabs.length?`<div class="tabs" id="mtabs">${tabs.map((t,i)=>`<button class="${i?"":"on"}" data-t="${i}">${esc(t.title)}</button>`).join("")}</div><div class="tabc" id="mtc"></div>`:""}
    <a class="btn ghost" target="_blank" rel="noopener" href="${wa(`السلام عليكم، عندي استفسار عن: ${p.name}`)}">اسأل عنه واتساب</a></div>`;
-  function upd(){const c=pick(p,sel);const old=+p.old_price>c.price?+p.old_price:0;
+  let curT=0;
+  function upd(){const c=pick(p,sel);if(tabs[curT]&&tabs[curT].nut&&$("#mtc"))$("#mtc").innerHTML=nutHTML();const old=+p.old_price>c.price?+p.old_price:0;
     $("#mpr").innerHTML=`<div style="display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap"><b class="cairo" style="font-size:2rem;color:var(--gold)">${num(c.price)}${sar}</b>${old?`<s style="color:var(--mut)">${num(old)}</s> <span class="bd off" style="position:static">وفّر ${num(old-c.price)}${sar}</span>`:""}</div>`;
     const o=old?Math.round((1-c.price/old)*100):0;$("#mbd").innerHTML=`${p.badge?`<span class="bd">${esc(p.badge)}</span>`:"<span></span>"}${o?`<span class="bd off">-${num(o)}٪</span>`:""}`;
     const L=[...c.imgs,p.image,...(Array.isArray(p.images)?p.images:[])].filter((v,i,a)=>v&&a.indexOf(v)===i);
@@ -910,7 +915,7 @@ function openP(id){const p=D.products.find(x=>x.id===id);if(!p)return;mq=1;
   function setImg(u){$("#mimg").src=u;document.querySelectorAll("#mth button").forEach(b=>b.classList.toggle("on",b.dataset.u===u));}
   document.querySelectorAll(".opts").forEach(el=>el.onclick=e=>{const b=e.target.closest("button");if(!b||b.disabled)return;sel[+el.dataset.g]=+b.dataset.i;upd();});
   const th=$("#mth");if(th)th.onclick=e=>{const b=e.target.closest("button");if(b)setImg(b.dataset.u);};
-  const tb=$("#mtabs");if(tb){const show=i=>{$("#mtc").innerHTML=tabs[i].html;if(tabs[i].rev)bindRev(p);tb.querySelectorAll("button").forEach(x=>x.classList.toggle("on",+x.dataset.t===i));};tb.onclick=e=>{const b=e.target.closest("button");if(b)show(+b.dataset.t);};show(0);}
+  const tb=$("#mtabs");if(tb){const show=i=>{curT=i;$("#mtc").innerHTML=tabs[i].nut?nutHTML():tabs[i].html;if(tabs[i].rev)bindRev(p);tb.querySelectorAll("button").forEach(x=>x.classList.toggle("on",+x.dataset.t===i));};tb.onclick=e=>{const b=e.target.closest("button");if(b)show(+b.dataset.t);};show(0);}
   $("#mm").onclick=()=>{mq=Math.max(1,mq-1);$("#mqv").textContent=mq;};$("#mp").onclick=()=>{mq++;$("#mqv").textContent=mq;};
   $("#madd").onclick=()=>{addCart(p,pick(p,sel),mq,$("#madd"));closeAll();setTimeout(openCart,250);};
   upd();modal.classList.add("on");ov.classList.add("on");$("#mbox").scrollTop=0;}
