@@ -937,12 +937,12 @@ function editP(p){
     if(t.dataset.om){const[a,b,k]=t.dataset.om.split(":").map(Number);const im=G[a].items[b].images;im.unshift(im.splice(k,1)[0]);drawG();return;}
     if(t.dataset.dg!==undefined){if(!await ask("تحذف هذي المجموعة كاملة؟","احذف"))return;G.splice(+t.dataset.dg,1);drawG();}
     else if(t.dataset.do){const[a,b]=t.dataset.do.split(":").map(Number);G[a].items.splice(b,1);if(!G[a].items.length)G.splice(a,1);drawG();}
-    else if(t.dataset.ao!==undefined){G[+t.dataset.ao].items.push({name:"",image:"",images:[],price:"",color:"",in_stock:true});drawG();const o=$("#grps").querySelectorAll(`.grp`)[+t.dataset.ao].querySelectorAll("[data-on]");o[o.length-1].focus();}
+    else if(t.dataset.ao!==undefined){G[+t.dataset.ao].items.push({name:"",image:"",images:[],price:"",color:"",in_stock:true,nutrition:[]});drawG();const o=$("#grps").querySelectorAll(`.grp`)[+t.dataset.ao].querySelectorAll("[data-on]");o[o.length-1].focus();}
     else if(t.dataset.oi){const[a,b]=t.dataset.oi.split(":").map(Number);const f=document.createElement("input");f.type="file";f.accept="image/*";f.multiple=true;
       f.onchange=async()=>{const fs=[...f.files];if(!fs.length)return;const box=$("#grps").querySelectorAll(".grp")[a].querySelectorAll(".opt")[b];box.querySelectorAll("[data-oi]").forEach(x=>x.classList.add("busy"));
         for(const x of fs){try{G[a].items[b].images.push(await PSData.uploadImage(await compress(x)));}catch(er){say(er.message);}}syncG();drawG();};f.click();}};
   $("#grps").addEventListener("change",e=>{if(e.target.matches("[data-gn]")){syncG();drawG();}});
-  document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=()=>{syncG();G.push({name:b.dataset.ag,items:[{name:"",image:"",images:[],price:"",color:"",in_stock:true}]});drawG();
+  document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=()=>{syncG();G.push({name:b.dataset.ag,items:[{name:"",image:"",images:[],price:"",color:"",in_stock:true,nutrition:[]}]});drawG();
     const gs=$("#grps").querySelectorAll(".grp");const last=gs[gs.length-1];(b.dataset.ag?last.querySelector("[data-on]"):last.querySelector("[data-gn]")).focus();});
   drawG();
   /* ---- الأقسام ---- */
