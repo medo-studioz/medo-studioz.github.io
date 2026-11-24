@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://sfvttxcivlidsnwvizmc.supabase.co wss://sfvttxcivlidsnwvizmc.supabase.co https://cdn.jsdelivr.net; frame-src https://www.google.com; form-action 'self'; base-uri 'self'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>لوحة التحكم – Perfect Supplement</title>
@@ -493,6 +495,12 @@ const PSData = (() => {
     async remove(table, id, key = "id") {
       if (!live) { const d = local(); d[table] = d[table].filter(x => x[key] !== id); saveLocal(d); return; }
       const c = await client(); chk(await c.from(table).delete().eq(key, id));
+    },
+    async dump(table) {
+      if (!live) { const d = local(); return table === "settings" ? [{ id: 1, data: d.settings }] : (d[table] || []); }
+      const c = await client(); let all = [], f = 0;
+      for (;;) { const r = chk(await c.from(table).select("*").range(f, f + 999)); all = all.concat(r); if (r.length < 1000) break; f += 1000; }
+      return all;
     },
     async list(table, order = "created_at") {
       if (!live) return local()[table] || [];
@@ -1107,10 +1115,16 @@ function vCats(){
 const F=[["store_name_ar","اسم المحل بالعربي"],["announcement","الشريط المتحرك فوق","عرض اليوم، كود خصم…"],["hero_title","العنوان الكبير"],["hero_sub","الجملة تحت العنوان","",1],
  ["whatsapp","رقم الواتساب للطلبات","بصيغة 9665xxxxxxxx"],["phone","رقم الاتصال"],["address","العنوان"],["hours_short","ساعات العمل المختصرة","تطلع في الواجهة الرئيسية"],["hours","أوقات العمل بالتفصيل","",1],["delivery_note","الاستلام والتوصيل"],
  ["map_url","رابط قوقل ماب"],["rating","تقييم قوقل"],["rating_count","عدد التقييمات"],["instagram","رابط انستقرام"],["snapchat","رابط سناب"],["tiktok","رابط تيك توك"]];
+document.addEventListener("click",async e=>{const b=e.target.closest("#bkBtn");if(!b)return;b.disabled=true;const t=b.textContent;b.textContent="جاري التجهيز…";
+  try{const out={exported_at:new Date().toISOString(),tables:{}};
+    for(const k of ["settings","categories","products","orders","coupons","customers","reviews","checkins"]){try{out.tables[k]=await PSData.dump(k);}catch(er){out.tables[k]={error:String(er.message||er)};}}
+    const u=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:"application/json"}));const l=document.createElement("a");l.href=u;l.download="perfect-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast("نزلت النسخة ✓");}
+  catch(er){say(er.message);}b.disabled=false;b.textContent=t;});
 function vSettings(){const S=D.settings;
   const ck=(k,l)=>`<label class="chk"><input type="checkbox" data-b="${k}" style="width:auto" ${S[k]==="true"?"checked":""}> ${l}</label>`;
   const ms=String(S.pay_methods||"").split(",");
   $("#view").innerHTML=`<div class="g2">${F.map(([k,l,ph,ta])=>`<label>${l}${ta?`<textarea data-k="${k}" placeholder="${ph||""}">${esc(S[k])}</textarea>`:`<input data-k="${k}" value="${esc(S[k])}" placeholder="${ph||""}" ${/whatsapp|phone|url|instagram|snapchat|tiktok/.test(k)?'dir="ltr"':""}>`}</label>`).join("")}</div>
+  <div class="blk" style="margin-top:1.2rem"><div class="hd"><h3>💾 نسخة احتياطية</h3><button class="btn red" id="bkBtn" type="button">نزّل نسخة من كل البيانات</button></div><div class="hint">ينزّل ملف فيه المنتجات والأقسام والطلبات والعملاء والكوبونات والتقييمات والإعدادات. احفظه في مكان آمن، لأن فيه بيانات العملاء. يفضّل تنزّل نسخة كل أسبوع.</div></div>
   <div class="blk" style="margin-top:1.2rem"><div class="hd"><h3>💳 الدفع</h3></div>
    ${ck("cod_enabled","الدفع عند الاستلام (الطلب يروح واتساب)")}
    ${ck("pay_enabled","الدفع الإلكتروني عن طريق ميسّر")}
