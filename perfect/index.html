@@ -358,11 +358,12 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
 
 
 /* بانرات العروض */
-.bnr{max-width:1240px;margin:1.1rem auto 0;padding:0 1.2rem;position:relative}
-.bn-vp{position:relative;overflow:hidden;border-radius:26px;aspect-ratio:2/1;max-height:560px;background:#0a0a0c;border:1px solid rgba(231,184,79,.25);box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}
+.bnr{position:relative;width:100%;margin:0;padding:0!important}
+.bn-vp{position:relative;overflow:hidden;height:clamp(420px,46vw,82vh);background:#0a0a0c;border-bottom:1px solid rgba(231,184,79,.25);touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.bn-vp.drag{cursor:grabbing}.bn-vp.drag .bn-track{transition:none}
 .bn-track{display:flex;height:100%;direction:rtl;transition:transform .8s cubic-bezier(.7,0,.2,1)}
-.bn-s{position:relative;min-width:100%;height:100%;overflow:hidden;cursor:pointer;direction:rtl}
-.bn-s>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:left center;transform:scale(1.08);transition:transform 6s ease-out}
+.bn-s{position:relative;min-width:100%;height:100%;overflow:hidden;direction:rtl}
+.bn-s>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:left 30%;transform:scale(1.08);pointer-events:none;transition:transform 6s ease-out}
 .bn-s.on>img{transform:scale(1)}
 .bn-s:after{content:"";position:absolute;inset:0;background:linear-gradient(270deg,rgba(0,0,0,.55),transparent 55%);pointer-events:none}
 .bn-t{position:absolute;z-index:2;top:50%;right:8.5%;width:44%;transform:translateY(-50%);color:#fff}
@@ -381,7 +382,7 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
 .bn-dots button{width:9px;height:9px;border-radius:99px;background:rgba(255,255,255,.35);transition:.35s}.bn-dots button.on{width:28px;background:#fff}
 .bn-ar{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);color:#fff;font-size:1.3rem;display:grid;place-items:center;border:1px solid rgba(255,255,255,.15)}
 .bn-ar.pv{right:2.1rem}.bn-ar.nx{left:2.1rem}
-@media(max-width:700px){.bnr{padding:0 .8rem;margin-top:.8rem}.bn-vp{aspect-ratio:auto;height:540px;border-radius:20px}
+@media(max-width:700px){.bn-vp{height:540px}
  .bn-s>img{object-position:17% 0;height:78%;bottom:auto}
  .bn-s:after{background:linear-gradient(0deg,rgba(0,0,0,.92) 18%,rgba(0,0,0,.55) 42%,transparent 62%)}
  .bn-t{top:auto;bottom:34px;right:0;left:0;width:auto;transform:none;padding:0 1.2rem}
@@ -1343,21 +1344,25 @@ render();
  ].filter(b=>D.products.some(p=>p.id===b.id&&p.in_stock!==false));
  if(!BN.length)return;const sec=$("#bnr");sec.hidden=false;
  $("#bnTrack").innerHTML=BN.map((b,i)=>{const p=D.products.find(x=>x.id===b.id),o=off(p);return `<div class="bn-s${i?"":" on"}" data-id="${p.id}" style="--bc:${b.c}" role="group" aria-label="${esc(p.name)}">
-   <img src="${b.img}" alt="${esc(p.name)}" ${i?'loading="lazy"':'fetchpriority="high"'}>
+   <img src="${b.img}" alt="${esc(p.name)}" draggable="false" ${i?'loading="lazy"':'fetchpriority="high"'}>
    <div class="bn-t"><span class="bn-tag">${b.tag}${o?` • خصم ${num(o)}٪`:""}</span><h2>${b.h} <em>${b.em}</em></h2><p>${b.p}${p.short?` • ${esc(p.short)}`:""}</p>
    <div class="bn-buy"><span class="bp">${num(minPrice(p))}${sar}${o?`<s>${num(p.old_price)}</s>`:""}</span><span class="btn">اطلبه الحين ←</span></div></div></div>`;}).join("");
  $("#bnDots").innerHTML=BN.map((b,i)=>`<button aria-label="بانر ${i+1}" class="${i?"":"on"}"></button>`).join("");
  let i=0,t;const S=[...document.querySelectorAll(".bn-s")],Dt=[...document.querySelectorAll("#bnDots button")];
  const go=n=>{i=(n+S.length)%S.length;$("#bnTrack").style.transform=`translateX(${i*100}%)`;S.forEach((s,k)=>s.classList.toggle("on",k===i));Dt.forEach((d,k)=>d.classList.toggle("on",k===i));};
- const auto=()=>{clearInterval(t);if(S.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches)t=setInterval(()=>go(i+1),5500);};
+ const auto=()=>{clearInterval(t);if(S.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches)t=setInterval(()=>go(i+1),3000);};
  Dt.forEach((d,k)=>d.onclick=e=>{e.stopPropagation();go(k);auto();});
  $("#bnNext").onclick=e=>{e.stopPropagation();go(i+1);auto();};$("#bnPrev").onclick=e=>{e.stopPropagation();go(i-1);auto();};
  if(S.length<2){$("#bnNext").hidden=$("#bnPrev").hidden=true;$("#bnDots").hidden=true;}
- let x0=null,moved=false;const vp=sec.querySelector(".bn-vp");
- vp.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;moved=false;},{passive:true});
- vp.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>40){moved=true;go(i+(dx>0?1:-1));auto();}});
- vp.addEventListener("mouseenter",()=>clearInterval(t));vp.addEventListener("mouseleave",auto);
- $("#bnTrack").onclick=e=>{if(moved){moved=false;return;}const s=e.target.closest(".bn-s");if(s)openP(s.dataset.id);};
+ let x0=null,y0=0,dx=0,moved=false,pid=null;const vp=sec.querySelector(".bn-vp"),tr=$("#bnTrack");
+ vp.addEventListener("pointerdown",e=>{if(e.button>0||e.target.closest(".bn-ar,.bn-dots"))return;x0=e.clientX;y0=e.clientY;dx=0;moved=false;pid=e.pointerId;clearInterval(t);});
+ vp.addEventListener("pointermove",e=>{if(x0==null||e.pointerId!==pid)return;dx=e.clientX-x0;
+   if(!vp.classList.contains("drag")){if(Math.abs(dx)<6)return;if(Math.abs(e.clientY-y0)>Math.abs(dx)){x0=null;auto();return;}vp.classList.add("drag");if(e.pointerType==="mouse")try{vp.setPointerCapture(pid);}catch(_){}}
+   const edge=(i===0&&dx<0)||(i===S.length-1&&dx>0)?.35:1;tr.style.transform=`translateX(calc(${i*100}% + ${dx*edge}px))`;});
+ const end=e=>{if(x0==null)return;x0=null;if(vp.classList.contains("drag")){vp.classList.remove("drag");moved=Math.abs(dx)>6;
+   if(Math.abs(dx)>vp.clientWidth*.12)go(i+(dx>0?1:-1));else go(i);}auto();};
+ vp.addEventListener("pointerup",end);vp.addEventListener("pointercancel",end);
+ $("#bnTrack").onclick=e=>{if(moved){moved=false;return;}const sl=e.target.closest(".bn-s");if(sl)openP(sl.dataset.id);};
  document.addEventListener("visibilitychange",()=>document.hidden?clearInterval(t):auto());auto();})();
 $("#grid").onclick=e=>{const c=e.target.closest(".card");if(!c)return;const p=D.products.find(x=>x.id===c.dataset.id);
   if(e.target.closest("[data-add]")){if(groups(p).some(g=>g.items.length>1))openP(p.id);else addCart(p,pick(p,groups(p).map(()=>0)),1,e.target.closest("[data-add]"));}
