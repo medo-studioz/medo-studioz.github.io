@@ -216,6 +216,10 @@ footer .f{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;ali
 .fl{display:flex;flex-wrap:wrap;gap:.45rem}
 .fl button{padding:.45rem .9rem;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:.9rem}
 .fl button.on{border-color:var(--gold);color:var(--gold2);background:rgba(231,184,79,.08)}
+@media(min-width:721px){.modal .box{width:min(1768px,96vw);height:min(885px,92svh);max-height:none;overflow:hidden;grid-template-columns:1fr 1fr}
+ .modal .mi{position:relative;height:100%;min-height:0;background:#0f0f12}.modal .mi>div{min-height:0}.modal .mi img#mimg{width:100%;height:100%;aspect-ratio:auto}
+ .modal .mb{overflow:auto;padding:clamp(1.6rem,2.6vw,3rem);gap:1rem;overscroll-behavior:contain}
+ .modal .mb h3,.modal .mb h2{font-size:clamp(1.6rem,2.2vw,2.4rem)}.modal .mb p{font-size:clamp(.95rem,1vw,1.1rem)}}
 @media(max-width:720px){.modal{place-items:end center;padding:0}.modal .box{grid-template-columns:1fr;border-radius:26px 26px 0 0}.modal .mi{position:relative}.modal .mi img#mimg{max-height:40svh;min-height:0}}
 .thumbs{display:flex;gap:.4rem;padding:.6rem;overflow-x:auto;background:var(--bg)}
 .thumbs button{flex:none;width:54px;height:54px;border-radius:10px;overflow:hidden;border:2px solid transparent;opacity:.7}
