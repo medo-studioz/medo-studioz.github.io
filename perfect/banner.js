@@ -77,13 +77,13 @@ window.PSBanner = (function () {
       g.fillStyle = sh; g.beginPath(); g.arc(0, 0, dw * .62, 0, 7); g.fill(); g.restore();
       g.drawImage(cut, CX - dw / 2, base - dh, dw, dh);
     } else { // صورة خلفيتها غامقة: ندمجها بحواف ناعمة
-      const S = 860, s = Math.max(S / iw, S / ih), w = iw * s, h = ih * s;
+      const S = 720, s = Math.max(S / iw, S / ih), w = iw * s, h = ih * s;
       const m = document.createElement("canvas"); m.width = S; m.height = S; const mg = m.getContext("2d");
       mg.drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
       mg.globalCompositeOperation = "destination-in";
       const rg = mg.createRadialGradient(S / 2, S / 2, S * .30, S / 2, S / 2, S * .5); rg.addColorStop(0, "#000"); rg.addColorStop(1, "rgba(0,0,0,0)");
       mg.fillStyle = rg; mg.fillRect(0, 0, S, S);
-      g.drawImage(m, CX - S / 2, 420 - S / 2);
+      g.drawImage(m, CX - S / 2, 405 - S / 2);
       g.save(); g.globalCompositeOperation = "screen"; const R = rnd((seed || 7) + 3);
       for (let k = 0; k < 60; k++) { const a = R() * 6.283, d = 300 + R() * 160, x = CX + Math.cos(a) * d, y = 410 + Math.sin(a) * d * .85; g.globalAlpha = .3 + R() * .6; g.fillStyle = R() > .7 ? "#fff6dc" : rgba(col, 1); g.beginPath(); g.arc(x, y, 1 + R() * 2.4, 0, 7); g.fill(); }
       g.restore(); g.globalAlpha = 1;
