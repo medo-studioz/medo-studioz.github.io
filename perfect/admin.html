@@ -150,6 +150,13 @@ input[type=color]{width:42px;height:42px;padding:3px;border-radius:10px}
  td.sk{grid-column:2/3}
  td.ac{grid-column:2/4}
 }
+.bns{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem}.bnk label{display:block}
+.bnpv{position:relative;aspect-ratio:2/1;border-radius:12px;overflow:hidden;background:#0b0b0d;margin:.2rem 0 .6rem;border:1px solid #2a2a2e}
+.bnpv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.bnno{position:absolute;inset:0;display:grid;place-items:center;color:#777}
+.bnpt{position:absolute;inset:0 4% 0 45%;display:flex;flex-direction:column;justify-content:center;gap:.15rem;color:#fff;text-shadow:0 2px 8px #000}
+.bnpt span{font-size:.62rem;color:var(--bc);font-weight:700}.bnpt b{font-size:1.05rem;line-height:1.2}.bnpt em{color:var(--bc);font-style:normal}.bnpt small{font-size:.6rem;opacity:.85;line-height:1.4}.bnpt i{font-style:normal;font-weight:800;font-size:.8rem}.bnpt s{opacity:.6;font-size:.7rem}
+.bnbt{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-bottom:.4rem}.bnst{font-size:.8rem;color:var(--mut)}
+@media(max-width:420px){.bns{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -175,6 +182,7 @@ input[type=color]{width:42px;height:42px;padding:3px;border-radius:10px}
     <button class="tab" data-t="coupons">🎟️<span>الكوبونات</span></button>
     <button class="tab" data-t="reviews">⭐<span>التقييمات</span><span class="c" id="revC" hidden></span></button>
     <button class="tab" data-t="customers">👥<span>العملاء</span></button>
+    <button class="tab" data-t="banners">🖼️<span>البانرات</span></button>
     <button class="tab" data-t="cats">🏷️<span>الأقسام</span></button>
     <button class="tab" data-t="settings">⚙️<span>الإعدادات</span></button>
     <div class="bot">
@@ -273,6 +281,15 @@ const PS_GOALS = [
 ];
 
 /* رسائل الأخطاء بالعربي */
+/* البانرات الافتراضية (٦ أماكن) — تتعدّل من لوحة التحكم ← البانرات */
+const PS_BANNERS = [
+  {on:true,id:"p1",img:"img/bn/iso.webp",c:"#e0a96a",tag:"بعد التمرين",h:"بروتين يبني عضلك",em:"بطعم الشوكولاتة وزبدة الفول",p:"بيف بروتين آيزوليت من بيج رامي لاب"},
+  {on:true,id:"p6",img:"img/bn/mass.webp",c:"#ff4040",tag:"للتضخيم",h:"ضخامة",em:"بدون تنازلات",p:"بيف ماس — ماس قينر بالشوكولاتة وزبدة الفول السوداني، سعرات وبروتين تكبّر فيها"},
+  {on:true,id:"p5",img:"img/bn/carbo.webp",c:"#ffd23c",tag:"وقود التمرين",h:"طاقة تدوم",em:"بطعم الأناناس",p:"كاربو بيق — كربوهيدرات تشحنك من أول تمرينك لآخره"},
+  {on:true,id:"p3",img:"img/bn/stomp.webp",c:"#ff8a1f",tag:"قبل التمرين",h:"انفجار طاقة",em:"بطعم المانجو",p:"ستومب بري ورك أوت — ضخ وتحمّل وتركيز"},
+  {on:true,id:"oiilpkkdidg0",img:"img/bn/goldcarb.webp",c:"#e7b84f",tag:"بعد التمرين",h:"شحن كامل",em:"لعضلاتك",p:"كومبلكس كارب جولد إديشن — كربوهيدرات معقّدة تعوّض طاقتك وتسرّع استشفاءك"},
+  {on:true,id:"o5y0rbj389uk",img:"img/bn/goldcreatine.webp",c:"#f3d27a",tag:"قوة وأداء",h:"قوة أكثر",em:"في كل عدّة",p:"كرياتين مونوهيدرات ١٠٠٪ جولد إديشن — يرفع قوتك وأداءك في التمرين"}
+];
 const PS_ERR = {
   coupon_invalid: "الكود غلط أو موقوف", coupon_expired: "الكود منتهي", coupon_used_up: "الكود خلصت مرات استخدامه",
   coupon_min: "الكود يشتغل إذا الطلب من {0} ريال وفوق", empty_cart: "السلة فاضية", name_required: "اكتب اسمك",
@@ -809,6 +826,103 @@ const PSPlan = (() => {
   return { GOAL, HEALTH, TERMS, VITAMINS, calc, recommend, blocked, needsDoctor, workout, cardio, meals, supSchedule, progress };
 })();
 
+/* صانع البانرات التلقائي: أي صورة تنرفع تتحول لبانر عريض ١٦٠٠×٨٠٠ بنفس ستايل البانرات */
+window.PSBanner = (function () {
+  const W = 1600, H = 800, CX = 400;
+  const rgb = (hex) => { const m = String(hex || "#e7b84f").replace("#", ""); const n = parseInt(m.length === 3 ? m.replace(/./g, "$&$&") : m, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  function rnd(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function load(src) { return new Promise((res, rej) => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => res(im); im.onerror = () => rej(new Error("الملف مو صورة")); im.src = src; }); }
+
+  // يقص المنتج من خلفية فاتحة (بيضاء)
+  function cutLight(im) {
+    const sc = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight));
+    const w = Math.round(im.naturalWidth * sc), h = Math.round(im.naturalHeight * sc);
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(im, 0, 0, w, h);
+    const d = x.getImageData(0, 0, w, h), a = d.data, T = 225;
+    const bg = (i) => a[i + 3] < 30 || (a[i] > T && a[i + 1] > T && a[i + 2] > T && Math.max(a[i], a[i + 1], a[i + 2]) - Math.min(a[i], a[i + 1], a[i + 2]) < 20);
+    const seen = new Uint8Array(w * h), st = [];
+    for (let i = 0; i < w; i++) st.push(i, (h - 1) * w + i);
+    for (let j = 0; j < h; j++) st.push(j * w, j * w + w - 1);
+    while (st.length) { const p = st.pop(); if (seen[p] || !bg(p * 4)) continue; seen[p] = 1; const px = p % w, py = (p / w) | 0;
+      if (px > 0) st.push(p - 1); if (px < w - 1) st.push(p + 1); if (py > 0) st.push(p - w); if (py < h - 1) st.push(p + w); }
+    let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (let p = 0; p < w * h; p++) { const i = p * 4; if (seen[p]) { a[i + 3] = 0; continue; }
+      const px = p % w, py = (p / w) | 0;
+      const nb = (px > 0 && seen[p - 1]) || (px < w - 1 && seen[p + 1]) || (py > 0 && seen[p - w]) || (py < h - 1 && seen[p + w]);
+      if (nb) { const m = Math.min(a[i], a[i + 1], a[i + 2]); if (m > 200) a[i + 3] = Math.round(255 * (1 - (m - 200) / 80)); }
+      if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
+    if (x1 <= x0 || y1 <= y0) return null;
+    x.putImageData(d, 0, 0);
+    const o = document.createElement("canvas"); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+    o.getContext("2d").drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
+  }
+
+  // يرسم الخلفية: إضاءة بلون البانر، جزيئات، خطوط ضوء، ومنصة
+  function scene(g, col, seed, pedestal) {
+    const R = rnd(seed);
+    g.fillStyle = "#060607"; g.fillRect(0, 0, W, H);
+    let gr = g.createRadialGradient(CX, 380, 30, CX, 420, 760); gr.addColorStop(0, rgba(col, .42)); gr.addColorStop(.35, rgba(col, .12)); gr.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    gr = g.createRadialGradient(1350, 120, 10, 1350, 120, 700); gr.addColorStop(0, rgba(col, .10)); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.save(); g.globalCompositeOperation = "screen";
+    for (let k = 0; k < 4; k++) { const y = 120 + R() * 520, ang = -0.25 + R() * 0.15; g.save(); g.translate(CX + 60, y); g.rotate(ang);
+      const lg = g.createLinearGradient(-700, 0, 900, 0); lg.addColorStop(0, "rgba(0,0,0,0)"); lg.addColorStop(.45, rgba(col, .16 + R() * .12)); lg.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = lg; g.fillRect(-700, -1.5 - R() * 2, 1600, 3 + R() * 4); g.restore(); }
+    for (let k = 0; k < 26; k++) { const r = 10 + R() * 34, x = CX + (R() - .5) * 760, y = 80 + R() * 600; g.globalAlpha = .05 + R() * .12;
+      const bg = g.createRadialGradient(x, y, 0, x, y, r); bg.addColorStop(0, rgba(col, 1)); bg.addColorStop(1, rgba(col, 0)); g.fillStyle = bg; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    for (let k = 0; k < 170; k++) { const ang = R() * 6.283, dist = 120 + Math.pow(R(), .7) * 420, x = CX + Math.cos(ang) * dist * 1.25, y = 400 + Math.sin(ang) * dist * .8;
+      if (x > 900) continue; g.globalAlpha = .25 + R() * .7; g.fillStyle = R() > .8 ? "#fff6dc" : rgba(col, 1); g.beginPath(); g.arc(x, y, .8 + R() * 2.8, 0, 7); g.fill(); }
+    g.restore(); g.globalAlpha = 1;
+    if (pedestal) {
+      const top = 612, rx = 250, ry = 46;
+      const body = g.createLinearGradient(CX - rx, 0, CX + rx, 0); body.addColorStop(0, "#050506"); body.addColorStop(.35, "#1d1d22"); body.addColorStop(.55, "#2a2a30"); body.addColorStop(1, "#060607");
+      g.fillStyle = body; g.beginPath(); g.moveTo(CX - rx, top); g.lineTo(CX - rx, H); g.lineTo(CX + rx, H); g.lineTo(CX + rx, top); g.fill();
+      g.fillStyle = "#121215"; g.beginPath(); g.ellipse(CX, top, rx, ry, 0, 0, 7); g.fill();
+      g.strokeStyle = rgba(col, .75); g.lineWidth = 2.5; g.beginPath(); g.ellipse(CX, top, rx, ry, 0, Math.PI * 0.02, Math.PI * 0.98); g.stroke();
+      g.strokeStyle = rgba(col, .35); g.lineWidth = 1.5; g.beginPath(); g.ellipse(CX, top, rx, ry, 0, Math.PI, Math.PI * 2); g.stroke();
+    }
+  }
+
+  async function make(src, color, seed) {
+    const im = typeof src === "string" ? await load(src) : src;
+    const col = rgb(color), c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+    const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+    if (iw / ih >= 1.55) { // صورة عريضة جاهزة: بس نقصها على المقاس
+      const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); return c;
+    }
+    // نعرف لون خلفية الصورة من الأطراف
+    const t = document.createElement("canvas"), tw = 120, th = Math.max(1, Math.round(ih * tw / iw)); t.width = tw; t.height = th;
+    const tx = t.getContext("2d"); tx.drawImage(im, 0, 0, tw, th); const dd = tx.getImageData(0, 0, tw, th).data; let sum = 0, n = 0, clear = 0;
+    const px = (i, j) => { const k = (j * tw + i) * 4; if (dd[k + 3] < 40) { clear++; return; } sum += (dd[k] + dd[k + 1] + dd[k + 2]) / 3; n++; };
+    for (let i = 0; i < tw; i++) { px(i, 0); px(i, th - 1); } for (let j = 0; j < th; j++) { px(0, j); px(tw - 1, j); }
+    const light = clear > n || (n && sum / n > 190);
+    const cut = light ? cutLight(im) : null;
+    scene(g, col, seed || 7, !!cut);
+    if (cut) {
+      const h = 520, w = cut.width * h / cut.height, base = 626, dw = Math.min(w, 560), dh = dw === w ? h : cut.height * dw / cut.width;
+      g.save(); g.translate(CX, base); g.scale(1, .13); const sh = g.createRadialGradient(0, 0, 0, 0, 0, dw * .62); sh.addColorStop(0, "rgba(0,0,0,.85)"); sh.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = sh; g.beginPath(); g.arc(0, 0, dw * .62, 0, 7); g.fill(); g.restore();
+      g.drawImage(cut, CX - dw / 2, base - dh, dw, dh);
+    } else { // صورة خلفيتها غامقة: ندمجها بحواف ناعمة
+      const S = 720, s = Math.max(S / iw, S / ih), w = iw * s, h = ih * s;
+      const m = document.createElement("canvas"); m.width = S; m.height = S; const mg = m.getContext("2d");
+      mg.drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
+      mg.globalCompositeOperation = "destination-in";
+      const rg = mg.createRadialGradient(S / 2, S / 2, S * .30, S / 2, S / 2, S * .5); rg.addColorStop(0, "#000"); rg.addColorStop(1, "rgba(0,0,0,0)");
+      mg.fillStyle = rg; mg.fillRect(0, 0, S, S);
+      g.drawImage(m, CX - S / 2, 405 - S / 2);
+      g.save(); g.globalCompositeOperation = "screen"; const R = rnd((seed || 7) + 3);
+      for (let k = 0; k < 60; k++) { const a = R() * 6.283, d = 300 + R() * 160, x = CX + Math.cos(a) * d, y = 410 + Math.sin(a) * d * .85; g.globalAlpha = .3 + R() * .6; g.fillStyle = R() > .7 ? "#fff6dc" : rgba(col, 1); g.beginPath(); g.arc(x, y, 1 + R() * 2.4, 0, 7); g.fill(); }
+      g.restore(); g.globalAlpha = 1;
+    }
+    const v = g.createRadialGradient(W / 2, H / 2, H * .45, W / 2, H / 2, W * .62); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.5)"); g.fillStyle = v; g.fillRect(0, 0, W, H);
+    return c;
+  }
+  function blob(canvas) { return new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("الصورة ما اشتغلت"))), "image/webp", .82)); }
+  return { make, blob };
+})();
+
 </script>
 <script>
 (async()=>{
@@ -828,9 +942,9 @@ $("#lform").onsubmit=async e=>{e.preventDefault();$("#lerr").textContent="";
 const out=async()=>{await PSData.logout();location.reload();};$("#out").onclick=out;$("#out2").onclick=out;
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));show();});
-const titles={products:"المنتجات",orders:"الطلبات",coupons:"كوبونات الخصم",reviews:"التقييمات",customers:"العملاء",cats:"الأقسام",settings:"إعدادات المحل"};
+const titles={products:"المنتجات",orders:"الطلبات",coupons:"كوبونات الخصم",reviews:"التقييمات",customers:"العملاء",cats:"الأقسام",banners:"البانرات المتحركة أعلى الموقع",settings:"إعدادات المحل"};
 function show(){$("#ttl").textContent=titles[tab];const n=D.orders.filter(o=>o.status==="new").length;$("#newC").hidden=!n;$("#newC").textContent=n;
-  ({products:vProducts,orders:vOrders,coupons:vCoupons,reviews:vReviews,customers:vCustomers,cats:vCats,settings:vSettings})[tab]();}
+  ({products:vProducts,orders:vOrders,coupons:vCoupons,reviews:vReviews,customers:vCustomers,cats:vCats,banners:vBanners,settings:vSettings})[tab]();}
 function ask(msg,ok="تأكيد",cancel="إلغاء"){return new Promise(r=>{const d=document.createElement("div");d.className="ov on";d.style.zIndex=70;
   d.innerHTML=`<div class="mbox" style="max-width:400px;text-align:center"><p style="font-weight:700">${esc(msg)}</p><div style="display:flex;gap:.6rem;justify-content:center">${cancel?`<button class="btn gh" data-n>${cancel}</button>`:""}<button class="btn red" data-y>${ok}</button></div></div>`;
   document.body.appendChild(d);d.onclick=e=>{if(e.target.closest("[data-y]")){d.remove();r(true);}else if(e.target===d||e.target.closest("[data-n]")){d.remove();r(false);}};});}
@@ -1117,6 +1231,47 @@ function vCats(){
     tr.querySelector("[data-sv]").onclick=async()=>{c.name=tr.querySelector("[data-n]").value.trim()||c.name;c.sort=+tr.querySelector("[data-o]").value||0;await PSData.save("categories",c);await reload();vCats();toast("انحفظ ✓");};
     tr.querySelector("[data-dl]").onclick=async()=>{if(D.products.some(p=>p.category_id===c.id))return say("فيه منتجات في هذا القسم. انقلها لقسم ثاني أول.");
       if(!await ask(`تحذف قسم «${c.name}»؟`,"احذف"))return;await PSData.remove("categories",c.id);await reload();vCats();};});
+}
+
+/* ============ البانرات ============ */
+let BNS=null;
+function vBanners(){
+  if(!BNS){const src=Array.isArray(D.settings.banners)&&D.settings.banners.length?D.settings.banners:PS_BANNERS;BNS=Array.from({length:6},(_,k)=>Object.assign({on:false,id:"",img:"",c:"#e7b84f",tag:"",h:"",em:"",p:""},JSON.parse(JSON.stringify(src[k]||{}))));}
+  const opts=id=>`<option value="">— اختر منتج —</option>`+D.products.map(p=>`<option value="${p.id}" ${p.id===id?"selected":""}>${esc(p.name)}${p.in_stock===false?" (نافد)":""}</option>`).join("");
+  $("#view").innerHTML=`<div class="hint" style="margin-bottom:1rem">هذي البانرات العريضة اللي تتحرك أعلى الموقع (كل ٣ ثواني، وتنسحب باليد). عندك ٦ أماكن. أي صورة ترفعها تتصمم تلقائيًا بنفس الستايل: خلفية داكنة بإضاءة بلون البانر، والمنتج على اليسار، والكلام على اليمين. السعر والخصم ينسحبون من المنتج نفسه.</div>
+  <div class="bns">${BNS.map((b,k)=>{const p=D.products.find(x=>x.id===b.id);return `<div class="blk bnk" data-k="${k}">
+   <div class="hd"><h3>بانر ${num(k+1)}</h3><label class="chk" style="margin:0"><input type="checkbox" data-f="on" style="width:auto" ${b.on?"checked":""}> ظاهر في الموقع</label></div>
+   <div class="bnpv" style="--bc:${esc(b.c)}">${b.img?`<img src="${esc(b.img)}" alt="">`:`<div class="bnno">ما فيه صورة</div>`}
+    <div class="bnpt"><span>${esc(b.tag)}${p&&off(p)?` • خصم ${num(off(p))}٪`:""}</span><b>${esc(b.h)} <em>${esc(b.em)}</em></b><small>${esc(b.p)}</small>${p?`<i>${num(PSU.minPrice?PSU.minPrice(p):p.price)} ريال${off(p)?` <s>${num(p.old_price)}</s>`:""}</i>`:""}</div></div>
+   <div class="bnbt"><button class="btn gh sm" data-up type="button">📷 ارفع صورة</button><button class="btn gh sm" data-gen type="button" ${p?"":"disabled"}>✨ صمّم من صورة المنتج</button>${b.img?`<button class="btn gh sm del" data-rm type="button">شيل الصورة</button>`:""}<span class="bnst" data-st></span></div>
+   <label>المنتج<select data-f="id">${opts(b.id)}</select></label>
+   <div class="g2"><label>الكلمة الصغيرة فوق <small>مثل: قبل التمرين</small><input data-f="tag" value="${esc(b.tag)}" maxlength="40"></label>
+    <label>لون الإضاءة<input data-f="c" type="color" value="${/^#[0-9a-f]{6}$/i.test(b.c)?b.c:"#e7b84f"}" style="height:42px;padding:3px"></label>
+    <label>العنوان الكبير <small>مثل: انفجار طاقة</small><input data-f="h" value="${esc(b.h)}" maxlength="40"></label>
+    <label>السطر الملوّن <small>مثل: بطعم المانجو</small><input data-f="em" value="${esc(b.em)}" maxlength="40"></label></div>
+   <label>الشرح<textarea data-f="p" maxlength="160" style="min-height:64px">${esc(b.p)}</textarea></label>
+   ${p?`<div class="g2"><label>السعر (ريال)<input data-pr type="number" min="0" value="${esc(p.price)}"></label><label>السعر قبل الخصم <small>فاضي = بدون خصم</small><input data-op type="number" min="0" value="${p.old_price>p.price?esc(p.old_price):""}"></label></div><div class="hint">تغيير السعر هنا يغيّره في المنتج نفسه وفي السلة.</div>`:""}
+   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem">${k?`<button class="btn gh sm" data-mv="-1" type="button">⬆ قدّمه</button>`:""}${k<5?`<button class="btn gh sm" data-mv="1" type="button">⬇ أخّره</button>`:""}${PS_BANNERS[k]?`<button class="btn gh sm" data-def type="button">رجّع الأصلي</button>`:""}</div></div>`;}).join("")}</div>
+  <div style="display:flex;gap:.6rem;margin-top:1.2rem;position:sticky;bottom:.6rem"><button class="btn red" id="bSave">حفظ البانرات</button><a class="btn gh" href="./" target="_blank">شوفها في الموقع ↗</a></div>`;
+  const rd=()=>$("#view").querySelectorAll(".bnk").forEach(el=>{const b=BNS[+el.dataset.k];el.querySelectorAll("[data-f]").forEach(i=>b[i.dataset.f]=i.type==="checkbox"?i.checked:i.value.trim());});
+  async function design(k,src,el){const b=BNS[k],st=el.querySelector("[data-st]");st.textContent="⏳ جاري التصميم…";
+    try{const cv=await PSBanner.make(src,b.c,(Date.now()%997)+k);const blob=await PSBanner.blob(cv);st.textContent="⏳ جاري الرفع…";const url=await PSData.uploadImage(blob);rd();b.img=url;b.on=true;vBanners();toast("تصمم البانر ✓ اضغط حفظ");}
+    catch(e){st.textContent="";say(e.message||"ما قدرت أصمم الصورة");}}
+  $("#view").querySelectorAll(".bnk").forEach(el=>{const k=+el.dataset.k,b=BNS[k];
+    el.querySelectorAll("[data-f]").forEach(i=>i.onchange=()=>{const was=b.id;rd();
+      if(i.dataset.f==="id"&&b.id!==was){const p=D.products.find(x=>x.id===b.id);if(p){b.p=p.name;b.img="";vBanners();const e2=$(`.bnk[data-k="${k}"]`);if(p.image)design(k,new URL(p.image,location.href).href,e2);return;}}
+      if(i.dataset.f==="id"||i.dataset.f==="c")vBanners();});
+    el.querySelector("[data-up]").onclick=()=>{rd();const f=document.createElement("input");f.type="file";f.accept="image/*";f.onchange=()=>{const x=f.files[0];if(!x)return;const u=URL.createObjectURL(x);design(k,u,el).finally(()=>setTimeout(()=>URL.revokeObjectURL(u),3000));};f.click();};
+    el.querySelector("[data-gen]").onclick=()=>{rd();const p=D.products.find(x=>x.id===BNS[k].id);if(p&&p.image)design(k,new URL(p.image,location.href).href,el);};
+    const rm=el.querySelector("[data-rm]");if(rm)rm.onclick=()=>{rd();BNS[k].img="";BNS[k].on=false;vBanners();};
+    el.querySelectorAll("[data-mv]").forEach(m=>m.onclick=()=>{rd();const j=k+ +m.dataset.mv;[BNS[k],BNS[j]]=[BNS[j],BNS[k]];vBanners();});
+    const df=el.querySelector("[data-def]");if(df)df.onclick=()=>{BNS[k]=Object.assign({},PS_BANNERS[k]);vBanners();};});
+  $("#bSave").onclick=async()=>{rd();
+    for(const [k,b] of BNS.entries())if(b.on&&(!b.id||!b.img))return say(`بانر ${num(k+1)} ظاهر بس ناقصه ${!b.id?"المنتج":"الصورة"}. كمّله أو شيل علامة «ظاهر».`);
+    try{for(const el of $("#view").querySelectorAll(".bnk")){const p=D.products.find(x=>x.id===BNS[+el.dataset.k].id),pr=el.querySelector("[data-pr]");if(!p||!pr)continue;
+        const np=+pr.value,no=+el.querySelector("[data-op]").value||null;if(np>0&&(np!==+p.price||(no||null)!==(p.old_price>p.price?+p.old_price:null))){p.price=np;p.old_price=no&&no>np?no:null;await PSData.save("products",p);}}
+      const s=Object.assign({},D.settings,{banners:BNS.map(b=>({on:!!b.on,id:b.id,img:b.img,c:b.c,tag:b.tag,h:b.h,em:b.em,p:b.p}))});
+      await PSData.saveSettings(s);D.settings=s;await reload();toast("انحفظت البانرات ✓");vBanners();}catch(e){say(e.message);}};
 }
 
 /* ============ الإعدادات ============ */

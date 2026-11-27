@@ -696,6 +696,15 @@ const PS_GOALS = [
 ];
 
 /* رسائل الأخطاء بالعربي */
+/* البانرات الافتراضية (٦ أماكن) — تتعدّل من لوحة التحكم ← البانرات */
+const PS_BANNERS = [
+  {on:true,id:"p1",img:"img/bn/iso.webp",c:"#e0a96a",tag:"بعد التمرين",h:"بروتين يبني عضلك",em:"بطعم الشوكولاتة وزبدة الفول",p:"بيف بروتين آيزوليت من بيج رامي لاب"},
+  {on:true,id:"p6",img:"img/bn/mass.webp",c:"#ff4040",tag:"للتضخيم",h:"ضخامة",em:"بدون تنازلات",p:"بيف ماس — ماس قينر بالشوكولاتة وزبدة الفول السوداني، سعرات وبروتين تكبّر فيها"},
+  {on:true,id:"p5",img:"img/bn/carbo.webp",c:"#ffd23c",tag:"وقود التمرين",h:"طاقة تدوم",em:"بطعم الأناناس",p:"كاربو بيق — كربوهيدرات تشحنك من أول تمرينك لآخره"},
+  {on:true,id:"p3",img:"img/bn/stomp.webp",c:"#ff8a1f",tag:"قبل التمرين",h:"انفجار طاقة",em:"بطعم المانجو",p:"ستومب بري ورك أوت — ضخ وتحمّل وتركيز"},
+  {on:true,id:"oiilpkkdidg0",img:"img/bn/goldcarb.webp",c:"#e7b84f",tag:"بعد التمرين",h:"شحن كامل",em:"لعضلاتك",p:"كومبلكس كارب جولد إديشن — كربوهيدرات معقّدة تعوّض طاقتك وتسرّع استشفاءك"},
+  {on:true,id:"o5y0rbj389uk",img:"img/bn/goldcreatine.webp",c:"#f3d27a",tag:"قوة وأداء",h:"قوة أكثر",em:"في كل عدّة",p:"كرياتين مونوهيدرات ١٠٠٪ جولد إديشن — يرفع قوتك وأداءك في التمرين"}
+];
 const PS_ERR = {
   coupon_invalid: "الكود غلط أو موقوف", coupon_expired: "الكود منتهي", coupon_used_up: "الكود خلصت مرات استخدامه",
   coupon_min: "الكود يشتغل إذا الطلب من {0} ريال وفوق", empty_cart: "السلة فاضية", name_required: "اكتب اسمك",
@@ -1336,29 +1345,24 @@ function render(){
 }
 render();
 /* بانرات المنتجات */
-(function(){const BN=[
-  {id:"p1",img:"img/bn/iso.webp",c:"#e0a96a",tag:"بروتين بقري نقي",h:"بروتين يبني عضلك",em:"بطعم الشوكولاتة وزبدة الفول",p:"بيف بروتين آيزوليت من بيج رامي لاب"},
-  {id:"p6",img:"img/bn/mass.webp",c:"#ff4040",tag:"للتضخيم",h:"ضخامة",em:"بدون تنازلات",p:"بيف ماس — ماس قينر بطعم الشوكولاتة، سعرات وبروتين تكبّر فيها"},
-  {id:"p5",img:"img/bn/carbo.webp",c:"#ffd23c",tag:"وقود التمرين",h:"طاقة تدوم",em:"بطعم الأناناس",p:"كاربو بيق — كربوهيدرات تشحنك من أول تمرينك لآخره"},
-  {id:"p3",img:"img/bn/stomp.webp",c:"#ff8a1f",tag:"قبل التمرين",h:"انفجار طاقة",em:"بطعم المانجو",p:"ستومب بري ورك أوت — ضخ وتحمّل وتركيز"}
- ].filter(b=>D.products.some(p=>p.id===b.id&&p.in_stock!==false));
+(function(){const BN=((Array.isArray(S.banners)&&S.banners.length?S.banners:PS_BANNERS).filter(b=>b&&b.on!==false&&b.img&&D.products.some(p=>p.id===b.id&&p.in_stock!==false))).slice(0,6);
  if(!BN.length)return;const sec=$("#bnr");sec.hidden=false;
- $("#bnTrack").innerHTML=BN.map((b,i)=>{const p=D.products.find(x=>x.id===b.id),o=off(p);return `<div class="bn-s${i?"":" on"}" data-id="${p.id}" style="--bc:${b.c}" role="group" aria-label="${esc(p.name)}">
-   <img src="${b.img}" alt="${esc(p.name)}" draggable="false" ${i?'loading="lazy"':'fetchpriority="high"'}>
-   <div class="bn-t"><span class="bn-tag">${b.tag}${o?` • خصم ${num(o)}٪`:""}</span><h2>${b.h} <em>${b.em}</em></h2><p>${b.p}${p.short?` • ${esc(p.short)}`:""}</p>
+ $("#bnTrack").innerHTML=BN.map((b,i)=>{const p=D.products.find(x=>x.id===b.id),o=off(p);return `<div class="bn-s${i?"":" on"}" data-id="${p.id}" style="--bc:${/^#[0-9a-f]{3,8}$/i.test(b.c)?b.c:"#e7b84f"}" role="group" aria-label="${esc(p.name)}">
+   <img src="${esc(b.img)}" alt="${esc(p.name)}" draggable="false" ${i?'loading="lazy"':'fetchpriority="high"'}>
+   <div class="bn-t"><span class="bn-tag">${esc(b.tag||"")}${o?` • خصم ${num(o)}٪`:""}</span><h2>${esc(b.h||"")} <em>${esc(b.em||"")}</em></h2><p>${esc(b.p||"")}${p.short?` • ${esc(p.short)}`:""}</p>
    <div class="bn-buy"><span class="bp">${num(minPrice(p))}${sar}${o?`<s>${num(p.old_price)}</s>`:""}</span><span class="btn">اطلبه الحين ←</span></div></div></div>`;}).join("");
  $("#bnDots").innerHTML=BN.map((b,i)=>`<button aria-label="بانر ${i+1}" class="${i?"":"on"}"></button>`).join("");
- let i=0,t;const S=[...document.querySelectorAll(".bn-s")],Dt=[...document.querySelectorAll("#bnDots button")];
- const go=n=>{i=(n+S.length)%S.length;$("#bnTrack").style.transform=`translateX(${i*100}%)`;S.forEach((s,k)=>s.classList.toggle("on",k===i));Dt.forEach((d,k)=>d.classList.toggle("on",k===i));};
- const auto=()=>{clearInterval(t);if(S.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches)t=setInterval(()=>go(i+1),3000);};
+ let i=0,t;const SL=[...document.querySelectorAll(".bn-s")],Dt=[...document.querySelectorAll("#bnDots button")];
+ const go=n=>{i=(n+SL.length)%SL.length;$("#bnTrack").style.transform=`translateX(${i*100}%)`;SL.forEach((s,k)=>s.classList.toggle("on",k===i));Dt.forEach((d,k)=>d.classList.toggle("on",k===i));};
+ const auto=()=>{clearInterval(t);if(SL.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches)t=setInterval(()=>go(i+1),3000);};
  Dt.forEach((d,k)=>d.onclick=e=>{e.stopPropagation();go(k);auto();});
  $("#bnNext").onclick=e=>{e.stopPropagation();go(i+1);auto();};$("#bnPrev").onclick=e=>{e.stopPropagation();go(i-1);auto();};
- if(S.length<2){$("#bnNext").hidden=$("#bnPrev").hidden=true;$("#bnDots").hidden=true;}
+ if(SL.length<2){$("#bnNext").hidden=$("#bnPrev").hidden=true;$("#bnDots").hidden=true;}
  let x0=null,y0=0,dx=0,moved=false,pid=null;const vp=sec.querySelector(".bn-vp"),tr=$("#bnTrack");
  vp.addEventListener("pointerdown",e=>{if(e.button>0||e.target.closest(".bn-ar,.bn-dots"))return;x0=e.clientX;y0=e.clientY;dx=0;moved=false;pid=e.pointerId;clearInterval(t);});
  vp.addEventListener("pointermove",e=>{if(x0==null||e.pointerId!==pid)return;dx=e.clientX-x0;
    if(!vp.classList.contains("drag")){if(Math.abs(dx)<6)return;if(Math.abs(e.clientY-y0)>Math.abs(dx)){x0=null;auto();return;}vp.classList.add("drag");if(e.pointerType==="mouse")try{vp.setPointerCapture(pid);}catch(_){}}
-   const edge=(i===0&&dx<0)||(i===S.length-1&&dx>0)?.35:1;tr.style.transform=`translateX(calc(${i*100}% + ${dx*edge}px))`;});
+   const edge=(i===0&&dx<0)||(i===SL.length-1&&dx>0)?.35:1;tr.style.transform=`translateX(calc(${i*100}% + ${dx*edge}px))`;});
  const end=e=>{if(x0==null)return;x0=null;if(vp.classList.contains("drag")){vp.classList.remove("drag");moved=Math.abs(dx)>6;
    if(Math.abs(dx)>vp.clientWidth*.12)go(i+(dx>0?1:-1));else go(i);}auto();};
  vp.addEventListener("pointerup",end);vp.addEventListener("pointercancel",end);
