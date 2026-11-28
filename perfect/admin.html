@@ -1126,10 +1126,12 @@ $("#ov").addEventListener("click",e=>{if(e.target.id==="ov"||e.target.closest("[
 
 /* ============ الطلبات ============ */
 const stTxt={new:"جديد",done:"تم",cancel:"ملغي"};
-let oF="all";
+let oF="all",oC="";
 function vOrders(){
-  const L=D.orders.filter(o=>oF==="all"||o.status===oF||(oF==="unpaid"&&o.payment==="online"&&!o.paid));
-  $("#view").innerHTML=`<div class="bar"><select id="oF" style="max-width:240px"><option value="all">كل الطلبات</option><option value="new">الجديدة</option><option value="done">المنتهية</option><option value="cancel">الملغية</option><option value="unpaid">دفع أونلاين بانتظار التأكيد</option></select></div>`+
+  const L=D.orders.filter(o=>(oF==="all"||o.status===oF||(oF==="unpaid"&&o.payment==="online"&&!o.paid))&&(!oC||String(o.coupon||"").toUpperCase()===oC));
+  const codes=[...new Set(D.orders.map(o=>String(o.coupon||"").toUpperCase()).filter(Boolean))].sort();if(oC&&!codes.includes(oC))codes.unshift(oC);
+  const cs=oC?L.filter(o=>o.status!=="cancel"):[];
+  $("#view").innerHTML=`<div class="bar"><select id="oF" style="max-width:240px"><option value="all">كل الطلبات</option><option value="new">الجديدة</option><option value="done">المنتهية</option><option value="cancel">الملغية</option><option value="unpaid">دفع أونلاين بانتظار التأكيد</option></select><select id="oC" style="max-width:240px"><option value="">كل أكواد الخصم</option>${codes.map(c=>`<option value="${esc(c)}" ${c===oC?"selected":""}>🎟️ ${esc(c)}</option>`).join("")}</select></div>${oC?`<div class="cards" style="margin-bottom:1rem"><div class="kpi"><b>${num(cs.length)}</b><span>طلب بكود ${esc(oC)}</span></div><div class="kpi"><b>${num(cs.reduce((a,o)=>a+(+o.total||0),0))}</b><span>ريال مبيعات</span></div><div class="kpi"><b>${num(cs.reduce((a,o)=>a+(+o.discount||0),0))}</b><span>ريال خصم</span></div><div class="kpi"><b>${num(cs.filter(o=>o.status==="done").length)}</b><span>طلب تم استلامه</span></div></div>`:""}`+
   (L.length?L.map(o=>`<div class="ord" data-id="${o.id}"><div class="h"><b>${esc(o.customer)}</b><span class="st ${o.status}">${stTxt[o.status]||o.status}</span>
    <span class="st" style="background:${o.payment==="online"?(o.paid?"rgba(34,197,94,.15);color:#4ade80":"rgba(255,170,0,.15);color:#ffb84d"):"#2a2a33;color:var(--mut)"}">${o.payment==="online"?(o.paid?"مدفوع أونلاين ✓":"أونلاين – لم يتأكد"):"دفع عند الاستلام"}</span>
    ${o.user_id?`<span class="st" style="background:rgba(56,214,236,.12);color:var(--cy)">عميل مسجّل</span>`:""}
@@ -1143,7 +1145,7 @@ function vOrders(){
     <button class="btn gh sm" data-s="done">✓ تم</button><button class="btn gh sm" data-s="new">جديد</button><button class="btn gh sm del" data-s="cancel">إلغاء</button>
     ${o.payment==="online"&&!o.paid?`<button class="btn gh sm" data-paid>تأكيد الدفع يدويًا</button>`:""}</div></div>`).join("")
   :`<div class="empty">ما فيه طلبات هنا.</div>`);
-  $("#oF").value=oF;$("#oF").onchange=e=>{oF=e.target.value;vOrders();};
+  $("#oF").value=oF;$("#oF").onchange=e=>{oF=e.target.value;vOrders();};$("#oC").onchange=e=>{oC=e.target.value;vOrders();};
   $("#view").querySelectorAll(".ord").forEach(el=>{const o=D.orders.find(x=>x.id===el.dataset.id);
     el.querySelectorAll("[data-s]").forEach(b=>b.onclick=async()=>{if(b.dataset.s==="cancel"&&!await ask("تلغي هذا الطلب؟ لو العميل استخدم نقاط بترجع له.","ألغِ الطلب"))return;
       try{await PSData.setOrderStatus(o.id,b.dataset.s);o.status=b.dataset.s;show();toast("انحفظ ✓");}catch(e){say(e.message);}});
@@ -1155,16 +1157,17 @@ async function vCoupons(){
   let C=await PSData.list("coupons").catch(e=>{say(e.message);return[];});
   const today=new Date().toISOString().slice(0,10);
   const state=c=>!c.active?"موقوف":c.expires_at&&c.expires_at<today?"منتهي":c.max_uses&&c.used>=c.max_uses?"خلص":"شغّال";
-  $("#view").innerHTML=`<div class="bar"><p style="color:var(--mut);flex:1">الزبون يكتب الكود في السلة، والخصم ينحسب لحاله.</p><button class="btn red" id="cpNew">＋ كود جديد</button></div>
-   ${C.length?`<table><thead><tr><th>الكود</th><th>الخصم</th><th class="hm">الشروط</th><th>الاستخدام</th><th>الحالة</th><th></th></tr></thead><tbody>
+  $("#view").innerHTML=`<div class="bar"><p style="color:var(--mut);flex:1">الزبون يكتب الكود في السلة، والخصم ينحسب لحاله. تقدر تسوي لكل كابتن كود باسمه (مثل CAPTAINALI)، واضغط «طلباته» تشوف كل الطلبات اللي جت منه ومبيعاته.</p><button class="btn red" id="cpNew">＋ كود جديد</button></div>
+   ${C.length?`<table><thead><tr><th>الكود</th><th>الخصم</th><th class="hm">الشروط</th><th>الاستخدام</th><th class="hm">مبيعاته</th><th>الحالة</th><th></th></tr></thead><tbody>
    ${C.map(c=>`<tr data-c="${esc(c.code)}"><td class="ci" style="font-weight:800;direction:ltr;text-align:right">${esc(c.code)}</td><td>${c.type==="percent"?num(c.value)+"٪":num(c.value)+sar}</td>
     <td class="hm" style="color:var(--mut);font-size:.85rem">${+c.min_total?`من ${num(c.min_total)} ريال`:"بدون حد أدنى"}${c.expires_at?` • لين ${esc(c.expires_at)}`:""}</td>
-    <td>${num(c.used)}${c.max_uses?` / ${num(c.max_uses)}`:""}</td><td><span class="st ${state(c)==="شغّال"?"done":"cancel"}">${state(c)}</span></td>
-    <td class="ac"><div class="acts"><button class="btn gh sm" data-e>تعديل</button><button class="btn gh sm del" data-d>حذف</button></div></td></tr>`).join("")}</tbody></table>`
+    <td>${num(c.used)}${c.max_uses?` / ${num(c.max_uses)}`:""}</td><td class="hm">${(()=>{const os=D.orders.filter(o=>String(o.coupon||"").toUpperCase()===c.code&&o.status!=="cancel");return `${num(os.reduce((a,o)=>a+(+o.total||0),0))} ريال <small style="color:var(--mut)">(${num(os.length)} طلب)</small>`;})()}</td><td><span class="st ${state(c)==="شغّال"?"done":"cancel"}">${state(c)}</span></td>
+    <td class="ac"><div class="acts"><button class="btn gh sm" data-o>📋 طلباته</button><button class="btn gh sm" data-e>تعديل</button><button class="btn gh sm del" data-d>حذف</button></div></td></tr>`).join("")}</tbody></table>`
    :`<div class="empty">ما فيه أكواد للحين. سوِّ أول كود، مثلًا WELCOME10 خصم ١٠٪ للعملاء الجدد.</div>`}`;
   $("#cpNew").onclick=()=>editCp(null,C);
   $("#view").querySelectorAll("tr[data-c]").forEach(tr=>{const c=C.find(x=>x.code===tr.dataset.c);
     tr.querySelector("[data-e]").onclick=()=>editCp(c,C);
+    tr.querySelector("[data-o]").onclick=()=>{oC=c.code;oF="all";document.querySelector('.tab[data-t=orders]').click();};
     tr.querySelector("[data-d]").onclick=async()=>{if(!await ask(`تحذف الكود ${c.code}؟`,"احذف"))return;await PSData.remove("coupons",c.code,"code");vCoupons();};});
 }
 function editCp(c,C){const n=!c;c=c||{code:"",type:"percent",value:"",min_total:0,max_uses:"",expires_at:"",active:true,used:0};
