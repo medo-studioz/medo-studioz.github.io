@@ -826,9 +826,9 @@ const PSPlan = (() => {
   return { GOAL, HEALTH, TERMS, VITAMINS, calc, recommend, blocked, needsDoctor, workout, cardio, meals, supSchedule, progress };
 })();
 
-/* صانع البانرات التلقائي: أي صورة تنرفع تتحول لبانر عريض ١٦٠٠×٨٠٠ بنفس ستايل البانرات */
+/* صانع البانرات التلقائي: أي صورة تنرفع تتحول لبانر عريض ٢٨٨٠×١٤٤٠ بنفس ستايل البانرات */
 window.PSBanner = (function () {
-  const W = 1600, H = 800, CX = 400;
+  const W = 1600, H = 800, CX = 400, K = 1.8; // نرسم بدقة ٢٨٨٠×١٤٤٠ عشان تطلع واضحة على الجوال والشاشات الكبيرة
   const rgb = (hex) => { const m = String(hex || "#e7b84f").replace("#", ""); const n = parseInt(m.length === 3 ? m.replace(/./g, "$&$&") : m, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
   function rnd(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
@@ -836,7 +836,7 @@ window.PSBanner = (function () {
 
   // يقص المنتج من خلفية فاتحة (بيضاء)
   function cutLight(im) {
-    const sc = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight));
+    const sc = Math.min(1, 2000 / Math.max(im.naturalWidth, im.naturalHeight));
     const w = Math.round(im.naturalWidth * sc), h = Math.round(im.naturalHeight * sc);
     const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(im, 0, 0, w, h);
     const d = x.getImageData(0, 0, w, h), a = d.data, T = 225;
@@ -886,7 +886,7 @@ window.PSBanner = (function () {
 
   async function make(src, color, seed) {
     const im = typeof src === "string" ? await load(src) : src;
-    const col = rgb(color), c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+    const col = rgb(color), c = document.createElement("canvas"); c.width = W * K; c.height = H * K; const g = c.getContext("2d"); g.scale(K, K); g.imageSmoothingQuality = "high";
     const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
     if (iw / ih >= 1.55) { // صورة عريضة جاهزة: بس نقصها على المقاس
       const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; g.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); return c;
@@ -906,12 +906,12 @@ window.PSBanner = (function () {
       g.drawImage(cut, CX - dw / 2, base - dh, dw, dh);
     } else { // صورة خلفيتها غامقة: ندمجها بحواف ناعمة
       const S = 720, s = Math.max(S / iw, S / ih), w = iw * s, h = ih * s;
-      const m = document.createElement("canvas"); m.width = S; m.height = S; const mg = m.getContext("2d");
+      const m = document.createElement("canvas"); m.width = S * K; m.height = S * K; const mg = m.getContext("2d"); mg.scale(K, K); mg.imageSmoothingQuality = "high";
       mg.drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
       mg.globalCompositeOperation = "destination-in";
       const rg = mg.createRadialGradient(S / 2, S / 2, S * .30, S / 2, S / 2, S * .5); rg.addColorStop(0, "#000"); rg.addColorStop(1, "rgba(0,0,0,0)");
       mg.fillStyle = rg; mg.fillRect(0, 0, S, S);
-      g.drawImage(m, CX - S / 2, 405 - S / 2);
+      g.drawImage(m, CX - S / 2, 405 - S / 2, S, S);
       g.save(); g.globalCompositeOperation = "screen"; const R = rnd((seed || 7) + 3);
       for (let k = 0; k < 60; k++) { const a = R() * 6.283, d = 300 + R() * 160, x = CX + Math.cos(a) * d, y = 410 + Math.sin(a) * d * .85; g.globalAlpha = .3 + R() * .6; g.fillStyle = R() > .7 ? "#fff6dc" : rgba(col, 1); g.beginPath(); g.arc(x, y, 1 + R() * 2.4, 0, 7); g.fill(); }
       g.restore(); g.globalAlpha = 1;
@@ -919,7 +919,7 @@ window.PSBanner = (function () {
     const v = g.createRadialGradient(W / 2, H / 2, H * .45, W / 2, H / 2, W * .62); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.5)"); g.fillStyle = v; g.fillRect(0, 0, W, H);
     return c;
   }
-  function blob(canvas) { return new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("الصورة ما اشتغلت"))), "image/webp", .82)); }
+  function blob(canvas) { return new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("الصورة ما اشتغلت"))), "image/webp", .9)); }
   return { make, blob };
 })();
 

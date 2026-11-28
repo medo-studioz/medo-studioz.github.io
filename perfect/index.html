@@ -1489,7 +1489,7 @@ render();
 (function(){const BN=((Array.isArray(S.banners)&&S.banners.length?S.banners:PS_BANNERS).filter(b=>b&&b.on!==false&&b.img&&D.products.some(p=>p.id===b.id&&p.in_stock!==false))).slice(0,6);
  if(!BN.length)return;const sec=$("#bnr");sec.hidden=false;
  $("#bnTrack").innerHTML=BN.map((b,i)=>{const p=D.products.find(x=>x.id===b.id),o=off(p);return `<div class="bn-s${i?"":" on"}" data-id="${p.id}" style="--bc:${/^#[0-9a-f]{3,8}$/i.test(b.c)?b.c:"#e7b84f"}" role="group" aria-label="${esc(p.name)}">
-   <img src="${esc(b.img)}" alt="${esc(p.name)}" draggable="false" ${i?'loading="lazy"':'fetchpriority="high"'}>
+   <img src="${esc(/^img\/bn\//.test(b.img)?b.img+"?v=2":b.img)}" alt="${esc(p.name)}" draggable="false" decoding="async" ${i?'loading="lazy"':'fetchpriority="high"'}>
    <div class="bn-t"><span class="bn-tag">${esc(b.tag||"")}${o?` • خصم ${num(o)}٪`:""}</span><h2>${esc(b.h||"")} <em>${esc(b.em||"")}</em></h2><p>${esc(b.p||"")}${p.short?` • ${esc(p.short)}`:""}</p>
    <div class="bn-buy"><span class="bp">${num(minPrice(p))}${sar}${o?`<s>${num(p.old_price)}</s>`:""}</span><span class="btn">اطلبه الحين ←</span></div></div></div>`;}).join("");
  $("#bnDots").innerHTML=BN.map((b,i)=>`<button aria-label="بانر ${i+1}" class="${i?"":"on"}"></button>`).join("");
