@@ -1972,6 +1972,7 @@ async function runIntro(){
   let n=0,sum=0;const probe=()=>{const r=g.ticker.deltaRatio(60);if(document.visibilityState==="visible"&&r<6){sum+=r;n++;}};g.ticker.add(probe);
   setTimeout(()=>{g.ticker.remove(probe);if(n>=20&&sum/n>2.2){LITE=true;d.classList.add("fx-lite");}},900);
   if(document.fonts&&document.fonts.ready)try{await timeout(document.fonts.ready,600);}catch(e){}
+  g.ticker.lagSmoothing(0);setTimeout(()=>{if(d.classList.contains("fx-intro")&&!/introPause/.test(location.search)){g.set("header .brand",{opacity:1});endIntro();}},7000);
   const tl=introTimeline(VAR);tl.eventCallback("onComplete",endIntro);
   window.PSFX_TL=tl;
   if(!/[?&]introPause/.test(location.search))tl.play();
