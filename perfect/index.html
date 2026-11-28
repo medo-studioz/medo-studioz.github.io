@@ -1931,7 +1931,7 @@ function introTimeline(v){
       .to(L,{backgroundPosition:"0% 0",duration:.9,ease:"power1.inOut",stagger:.02},1.85)
       .addLabel("fly",2.55)
       .to([".fxI-man",".fxI-smoke",".fxI-bg"],{opacity:0,duration:.5,ease:"power2.in"},"fly")
-      .to(name,{...(flyTarget(name)||{y:-40,opacity:0}),duration:.75,ease:"power3.inOut"},"fly")
+      .to(name,{...(flyTarget(name)||{y:-40,opacity:0}),letterSpacing:"0.02em",duration:.75,ease:"power3.inOut"},"fly")
       .to("header .brand",{opacity:1,duration:.3},"fly+=.55")
       .to("#fxI",{backgroundColor:"rgba(0,0,0,0)",duration:.5,ease:"power1.in"},"fly+=.3")
       .to(name,{opacity:0,duration:.2},"fly+=.7");
