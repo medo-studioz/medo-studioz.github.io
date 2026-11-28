@@ -1280,7 +1280,7 @@ function vBanners(){
 /* ============ الإعدادات ============ */
 const F=[["store_name_ar","اسم المحل بالعربي"],["announcement","الشريط الأصفر المتحرك أعلى الموقع","مثال: الكرياتين العلبتين بـ 100 ريال فقط • عينات مجانية"],["hero_title","العنوان الكبير"],["hero_sub","الجملة تحت العنوان","",1],
  ["whatsapp","رقم الواتساب للطلبات","بصيغة 9665xxxxxxxx"],["phone","رقم الاتصال"],["address","العنوان"],["hours","أوقات العمل (تطلع في قسم «زورنا» أسفل الموقع)","",1],["delivery_note","الاستلام والتوصيل"],["delivery_fee","رسوم التوصيل داخل المدينة (ريال)","10"],["free_delivery_min","التوصيل مجاني للطلبات من (ريال) — اكتب 0 لإلغائه","250"],
- ["map_url","رابط قوقل ماب"],["rating","تقييم قوقل"],["rating_count","عدد التقييمات"],["instagram","رابط انستقرام"],["snapchat","رابط سناب"],["tiktok","رابط تيك توك"]];
+ ["map_url","رابط قوقل ماب"],["rating","تقييم قوقل"],["rating_count","عدد التقييمات"],["customers_count","عدد العملاء (يطلع في عدّاد الموقع، فاضي = ما يطلع)"],["instagram","رابط انستقرام"],["snapchat","رابط سناب"],["tiktok","رابط تيك توك"]];
 document.addEventListener("click",async e=>{const b=e.target.closest("#bkBtn");if(!b)return;b.disabled=true;const t=b.textContent;b.textContent="جاري التجهيز…";
   try{const out={exported_at:new Date().toISOString(),tables:{}};
     for(const k of ["settings","categories","products","orders","coupons","customers","reviews","checkins"]){try{out.tables[k]=await PSData.dump(k);}catch(er){out.tables[k]={error:String(er.message||er)};}}
