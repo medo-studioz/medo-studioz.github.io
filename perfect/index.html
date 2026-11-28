@@ -1969,8 +1969,8 @@ async function runIntro(){
   if(!g){$("#fxI").style.transition="opacity .5s";$("#fxI").style.opacity=0;setTimeout(endIntro,500);return;}
   if(LITE){liteIntro(g);return;}
   /* لو الجهاز ثقيل في أول نص ثانية، نكمل الدخلة بس نخفف السكرول */
-  let n=0,sum=0;const probe=()=>{sum+=g.ticker.deltaRatio(60);n++;};g.ticker.add(probe);
-  setTimeout(()=>{g.ticker.remove(probe);if(n&&sum/n>1.9){LITE=true;d.classList.add("fx-lite");}},700);
+  let n=0,sum=0;const probe=()=>{const r=g.ticker.deltaRatio(60);if(document.visibilityState==="visible"&&r<6){sum+=r;n++;}};g.ticker.add(probe);
+  setTimeout(()=>{g.ticker.remove(probe);if(n>=20&&sum/n>2.2){LITE=true;d.classList.add("fx-lite");}},900);
   if(document.fonts&&document.fonts.ready)try{await timeout(document.fonts.ready,600);}catch(e){}
   const tl=introTimeline(VAR);tl.eventCallback("onComplete",endIntro);
   window.PSFX_TL=tl;
